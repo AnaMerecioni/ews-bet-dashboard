@@ -4,11 +4,18 @@ Dashboard frontend React + TanStack Start + Tailwind pentru sistemul de avertiza
 
 ## GitHub Pages
 
-Workflow-ul `.github/workflows/pages.yml` construiește aplicația statică la fiecare push în `main` și o publică pe GitHub Pages.
+Repository-ul are deja build static publicat pe branch-ul `gh-pages`.
 
-URL public: https://anamerecioni.github.io/ews-bet-dashboard/
+URL: https://anamerecioni.github.io/ews-bet-dashboard/
 
-În **Settings → Pages**, sursa trebuie să fie **GitHub Actions** (workflow-ul folosește `actions/configure-pages` și permisiunea `pages: write`).
+Pentru a publica o versiune nouă după modificări în aplicație, rulează din rădăcina repository-ului:
+
+```bash
+npm install --legacy-peer-deps
+bash scripts/deploy-pages.sh
+```
+
+Scriptul construiește aplicația în modul `GH_PAGES=1`, pregătește fallback-ul SPA și împinge build-ul pe branch-ul `gh-pages`. În **Settings → Pages**, sursa trebuie să rămână branch-ul `gh-pages` (root).
 
 ## Rulare locală
 
@@ -28,7 +35,7 @@ Aplicația acceptă exact următoarele formate:
 - `outcomes.csv` (opțional): `Date,stress_event_20d[,BET,asset]` — etichete istorice pentru Backtest.
 - `sensitivity.csv` (opțional): `feature,shift_sigma,probability`.
 
-Notebook-ul DataSprint exportă aceste patru CSV-uri. După rularea completă, încarcă-le în repository-ul public de date `AnaMerecioni/ews-bet-date` înlocuind fișierele omonime. Apoi, în pagina **Date** a dashboard-ului, conectează linkurile raw:
+Notebook-ul DataSprint exportă aceste patru CSV-uri. După rularea completă, încarcă-le în repository-ul public de date `AnaMerecioni/ews-bet-date`, înlocuind fișierele omonime. Apoi, în pagina **Date** a dashboard-ului, conectează linkurile raw:
 
 - `https://raw.githubusercontent.com/AnaMerecioni/ews-bet-date/main/predictions.csv`
 - `https://raw.githubusercontent.com/AnaMerecioni/ews-bet-date/main/drivers.csv`
@@ -38,7 +45,3 @@ Notebook-ul DataSprint exportă aceste patru CSV-uri. După rularea completă, �
 Alternativ, încarcă fișierele CSV direct din pagina **Date**. Dashboard-ul nu antrenează modelul și nu execută Python; notebook-ul Kaggle rămâne responsabil pentru antrenare și generarea predicțiilor.
 
 **Confidențialitate:** nu publica `train.csv`, `test.csv`, documente NLP sau alte date brute ale competiției. Publică doar exporturile strict necesare și numai dacă termenii competiției permit acest lucru.
-
-## Deployment manual (opțional)
-
-`bash scripts/deploy-pages.sh` construiește site-ul în modul GitHub Pages și publică branch-ul `gh-pages`. Pentru utilizarea obișnuită este recomandat workflow-ul automat de mai sus.
