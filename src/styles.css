@@ -1,0 +1,359 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-violet: var(--brand-violet);
+  --color-brand-cyan: var(--brand-cyan);
+  --color-brand-pink: var(--brand-pink);
+  --color-kpmg-blue: var(--kpmg-blue);
+  --color-kpmg-cobalt: var(--kpmg-cobalt);
+  --color-kpmg-pacific: var(--kpmg-pacific);
+  --color-kpmg-purple: var(--kpmg-purple);
+  --color-kpmg-pink: var(--kpmg-pink);
+  --color-kpmg-dark: var(--kpmg-dark);
+  --color-risk-low: var(--risk-low);
+  --color-risk-moderate: var(--risk-moderate);
+  --color-risk-high: var(--risk-high);
+  --color-risk-up: var(--risk-up);
+  --color-risk-down: var(--risk-down);
+  --color-risk-up-text: var(--risk-up-text);
+  --color-risk-down-text: var(--risk-down-text);
+  --color-on-risk: var(--on-risk);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-border: var(--sidebar-border);
+  --shadow-card: var(--shadow-soft);
+}
+
+/* ============ Paleta de brand KPMG (sursa unică pentru toate culorile de brand) ============ */
+:root {
+  --kpmg-blue: #00338d;      /* KPMG Blue – culoarea principală */
+  --kpmg-cobalt: #1e49e2;    /* Cobalt Blue – accent, linkuri, focus */
+  --kpmg-pacific: #00b8f5;   /* Pacific Blue – accent deschis */
+  --kpmg-purple: #7213ea;    /* Purple – accent secundar */
+  --kpmg-pink: #fd349c;      /* Pink – evidențieri rare */
+  --kpmg-dark: #0c233c;      /* Dark Blue – text și fundal întunecat */
+  --kpmg-medium: #005eb8;    /* Medium Blue */
+  --kpmg-light: #0091da;     /* Light Blue */
+  --kpmg-violet: #483698;    /* Violet */
+  --kpmg-teal: #00a3a1;      /* Green / teal */
+
+  /* Culori pentru categoriile de risc (grafice), toate din paleta KPMG */
+  --cat-1: var(--kpmg-blue);
+  --cat-2: var(--kpmg-pacific);
+  --cat-3: var(--kpmg-purple);
+  --cat-4: var(--kpmg-teal);
+  --cat-5: var(--kpmg-pink);
+  --cat-6: var(--kpmg-medium);
+  --cat-7: var(--kpmg-violet);
+  --cat-8: var(--kpmg-light);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: oklch(0.982 0.006 255);
+  --foreground: var(--kpmg-dark);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--kpmg-dark);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--kpmg-dark);
+  --brand: var(--kpmg-blue);
+  --brand-accent: var(--kpmg-cobalt);
+  --brand-violet: var(--kpmg-purple);
+  --brand-cyan: var(--kpmg-pacific);
+  --brand-pink: var(--kpmg-pink);
+  --primary: var(--brand);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.955 0.012 258);
+  --secondary-foreground: oklch(0.28 0.08 262);
+  --muted: oklch(0.955 0.008 258);
+  --muted-foreground: oklch(0.46 0.03 260);
+  --accent: oklch(0.94 0.025 262);
+  --accent-foreground: oklch(0.28 0.12 262);
+  --destructive: oklch(0.52 0.19 28);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.905 0.012 258);
+  --input: oklch(0.86 0.015 258);
+  --ring: var(--brand-accent);
+  --risk-low: oklch(0.53 0.13 150);
+  --risk-moderate: oklch(0.555 0.15 52);
+  --risk-high: oklch(0.52 0.19 28);
+  --risk-up: oklch(0.55 0.19 28);
+  --risk-down: oklch(0.52 0.2 262);
+  --risk-up-text: oklch(0.48 0.19 28);
+  --risk-down-text: oklch(0.45 0.2 262);
+  --on-risk: oklch(1 0 0);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.2 0.035 262);
+  --sidebar-accent: var(--brand);
+  --sidebar-border: oklch(0.905 0.012 258);
+  --shadow-soft: 0 1px 2px oklch(0.2 0.05 262 / 0.05), 0 8px 24px -12px oklch(0.2 0.08 262 / 0.14);
+  --grid-line: oklch(0.2 0.05 262 / 0.035);
+}
+
+.dark {
+  --cat-1: var(--kpmg-pacific);
+  --cat-6: var(--kpmg-light);
+  --cat-7: #8f7fe0;
+  --background: oklch(0.17 0.025 262);
+  --foreground: oklch(0.95 0.008 258);
+  --card: oklch(0.215 0.03 262);
+  --card-foreground: oklch(0.95 0.008 258);
+  --popover: oklch(0.235 0.03 262);
+  --popover-foreground: oklch(0.95 0.008 258);
+  --primary: var(--kpmg-pacific);
+  --primary-foreground: var(--kpmg-dark);
+  --brand-accent: var(--kpmg-pacific);
+  --secondary: oklch(0.27 0.03 262);
+  --secondary-foreground: oklch(0.93 0.01 258);
+  --muted: oklch(0.26 0.025 262);
+  --muted-foreground: oklch(0.74 0.025 258);
+  --accent: oklch(0.29 0.05 262);
+  --accent-foreground: oklch(0.93 0.02 258);
+  --border: oklch(0.32 0.03 262);
+  --input: oklch(0.4 0.03 262);
+  --ring: var(--kpmg-pacific);
+  --risk-up: oklch(0.66 0.17 28);
+  --risk-down: oklch(0.68 0.14 258);
+  --risk-up-text: oklch(0.76 0.13 28);
+  --risk-down-text: oklch(0.78 0.11 258);
+  --sidebar: oklch(0.2 0.028 262);
+  --sidebar-foreground: oklch(0.95 0.008 258);
+  --sidebar-accent: var(--brand);
+  --sidebar-border: oklch(0.3 0.03 262);
+  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px -12px oklch(0 0 0 / 0.5);
+  --grid-line: oklch(1 0 0 / 0.03);
+}
+
+/* Okabe-Ito based colorblind-safe palette */
+.cb {
+  --risk-low: oklch(0.5 0.12 245);
+  --risk-moderate: oklch(0.53 0.12 72);
+  --risk-high: oklch(0.52 0.16 42);
+  --risk-up: oklch(0.6 0.16 42);
+  --risk-down: oklch(0.52 0.12 245);
+  --risk-up-text: oklch(0.5 0.16 42);
+  --risk-down-text: oklch(0.45 0.12 245);
+}
+.dark.cb {
+  --risk-up-text: oklch(0.76 0.13 50);
+  --risk-down-text: oklch(0.78 0.1 240);
+}
+
+.hc {
+  --foreground: oklch(0.08 0 0);
+  --muted-foreground: oklch(0.25 0.02 260);
+  --border: oklch(0.45 0.03 260);
+  --input: oklch(0.35 0.03 260);
+}
+.dark.hc {
+  --foreground: oklch(1 0 0);
+  --muted-foreground: oklch(0.9 0.01 258);
+  --border: oklch(0.7 0.03 260);
+}
+
+.reduce-motion *, .reduce-motion *::before, .reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@utility card-surface {
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+
+@utility spotlight {
+  box-shadow: 0 0 0 9999px oklch(0.12 0.03 262 / 0.62);
+}
+@utility bg-overlay {
+  background-color: oklch(0.12 0.03 262 / 0.62);
+}
+
+@utility bg-grid {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "tnum" 1, "cv11" 1;
+  }
+  :focus-visible {
+    outline: 3px solid var(--ring) !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--background);
+  }
+  [data-tour-active="true"] {
+    outline: 3px solid var(--brand-accent);
+    outline-offset: 4px;
+  }
+}
+
+/* ============ Liquid glass (only when html.glass; removed by Reduce transparența / contrast ridicat) ============ */
+.mesh { display: none; }
+.glass .mesh {
+  display: block; position: fixed; inset: -20%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(40% 35% at 20% 25%, color-mix(in oklab, var(--brand-accent) 22%, transparent), transparent 70%),
+    radial-gradient(35% 30% at 80% 20%, color-mix(in oklab, var(--brand-violet) 12%, transparent), transparent 70%),
+    radial-gradient(45% 40% at 70% 80%, color-mix(in oklab, var(--brand) 16%, transparent), transparent 70%),
+    radial-gradient(30% 28% at 45% 55%, color-mix(in oklab, var(--brand-cyan) 12%, transparent), transparent 70%),
+    radial-gradient(40% 35% at 15% 85%, oklch(0.97 0.02 250 / 0.9), transparent 70%),
+    linear-gradient(160deg, oklch(0.97 0.015 255), oklch(0.93 0.03 262));
+  animation: mesh-drift 45s ease-in-out infinite alternate;
+}
+.glass.dark .mesh {
+  background:
+    radial-gradient(40% 35% at 20% 25%, color-mix(in oklab, var(--brand-accent) 35%, transparent), transparent 70%),
+    radial-gradient(35% 30% at 80% 20%, color-mix(in oklab, var(--brand-violet) 22%, transparent), transparent 70%),
+    radial-gradient(45% 40% at 70% 80%, color-mix(in oklab, var(--brand) 40%, transparent), transparent 70%),
+    linear-gradient(160deg, oklch(0.15 0.04 262), oklch(0.12 0.05 265));
+}
+@keyframes mesh-drift {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50% { transform: translate3d(4%, -3%, 0) rotate(6deg) scale(1.05); }
+  100% { transform: translate3d(-3%, 3%, 0) rotate(-4deg) scale(1.02); }
+}
+.reduce-motion .mesh { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .mesh { animation: none !important; } }
+
+/* Translucent tokens. Opacities chosen so muted text keeps ≥4.5:1 over the darkest/brightest mesh spot. */
+.glass {
+  --card: oklch(1 0 0 / 0.74);
+  --popover: oklch(1 0 0 / 0.9);
+  --sidebar: oklch(1 0 0 / 0.68);
+  --glass-chart: oklch(1 0 0 / 0.86);
+  --glass-edge: oklch(1 0 0 / 0.75);
+  --radius: 1.125rem;
+  --shadow-soft: 0 1px 1px oklch(0.2 0.08 262 / 0.04), 0 10px 30px -12px oklch(0.2 0.1 262 / 0.22), inset 0 1px 0 oklch(1 0 0 / 0.6);
+}
+.glass.dark {
+  --card: oklch(0.22 0.035 262 / 0.72);
+  --popover: oklch(0.23 0.035 262 / 0.92);
+  --sidebar: oklch(0.2 0.035 262 / 0.7);
+  --glass-chart: oklch(0.21 0.035 262 / 0.86);
+  --glass-edge: oklch(1 0 0 / 0.22);
+  --shadow-soft: 0 1px 1px oklch(0 0 0 / 0.3), 0 14px 34px -14px oklch(0 0 0 / 0.65), inset 0 1px 0 oklch(1 0 0 / 0.1);
+}
+.glass .app-root { background-color: transparent; background-image: none; }
+.glass .card-surface {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    linear-gradient(180deg, var(--glass-edge), oklch(1 0 0 / 0) 60%, var(--border)) border-box;
+}
+.glass .glass-chart.card-surface {
+  background:
+    linear-gradient(var(--glass-chart), var(--glass-chart)) padding-box,
+    linear-gradient(180deg, var(--glass-edge), oklch(1 0 0 / 0) 60%, var(--border)) border-box;
+}
+.glass .recharts-cartesian-grid line { stroke-opacity: 0.5; }
+
+@supports ((backdrop-filter: blur(1px))) {
+  .glass .card-surface,
+  .glass .glass-bar,
+  .glass [role="dialog"],
+  .glass [role="listbox"],
+  .glass [data-sonner-toast] {
+    backdrop-filter: blur(24px) saturate(160%);
+  }
+  /* never nest blur layers */
+  .glass [role="dialog"] .card-surface,
+  .glass [role="dialog"] [role="listbox"],
+  .glass .glass-bar [role="listbox"],
+  .glass .glass-bar .card-surface { backdrop-filter: none; }
+}
+/* No backdrop-filter → solid surfaces */
+@supports not ((backdrop-filter: blur(1px))) {
+  .glass { --card: oklch(1 0 0); --popover: oklch(1 0 0); --sidebar: oklch(1 0 0); --glass-chart: oklch(1 0 0); }
+  .glass.dark { --card: oklch(0.215 0.03 262); --popover: oklch(0.235 0.03 262); --sidebar: oklch(0.2 0.028 262); --glass-chart: oklch(0.215 0.03 262); }
+}
+.glass [data-sonner-toast] { background: var(--popover) !important; border-radius: 16px !important; }
+
+/* Pointer-following sheen on primary cards */
+.glass .sheen { position: relative; isolation: isolate; }
+.glass .sheen::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 0%), oklch(1 0 0 / 0.16), transparent 60%);
+  transition: opacity 250ms ease;
+}
+.glass .sheen:hover::after { opacity: 1; }
+.reduce-motion .sheen::after { display: none; }
+@media (prefers-reduced-motion: reduce) { .sheen::after { display: none; } }
+
+/* Liquid pills: level badge keeps solid level color (white text contrast), gloss only at the top edge */
+.glass .liquid-pill {
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.45), inset 0 -6px 12px oklch(0 0 0 / 0.12), 0 6px 18px -6px currentColor;
+  background-image: linear-gradient(180deg, oklch(1 0 0 / 0.22), oklch(1 0 0 / 0) 45%);
+}
+.glass .liquid-number {
+  border-radius: 1.25rem; padding: 0.1em 0.35em;
+  background: color-mix(in oklab, currentColor 9%, var(--glass-chart));
+  box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 22px color-mix(in oklab, currentColor 14%, transparent);
+}
+
+/* Buttons: liquid press */
+.glass button:not(:disabled), .glass a.btn-like {
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 150ms ease, box-shadow 150ms ease;
+}
+.glass button:not(:disabled):active { transform: scale(0.96); }
+.glass button.rounded-md, .glass button.rounded-lg { border-radius: 9999px; }
+
+.print-only { display: none; }
+@media print {
+  .mesh { display: none !important; }
+  html, body, .app-root { background: white !important; }
+  .card-surface { backdrop-filter: none !important; background: white !important; }
+  body * { visibility: hidden; }
+  #raport, #raport * { visibility: visible; }
+  #raport { display: block !important; position: absolute; inset: 0; padding: 24px; background: white; color: black; }
+}
