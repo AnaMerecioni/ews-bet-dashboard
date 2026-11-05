@@ -1,6 +1,7 @@
 import Papa from "papaparse";
 import { parseDate } from "./parse";
 import { createLocalStore } from "./localStore";
+import { baseMeta, extendTable, SOURCES, type ColMeta, type ExtSeries } from "./sources";
 
 /**
  * „Extensia” = scraper-ul de date externe (datasprint-ews-scraper): crypto (Binance), vulnerabilități exploatate
@@ -19,6 +20,11 @@ export interface ExtRow {
   kevRansom?: number;    // CYBER_KEV_ransomware_count
   newsCyber?: number;    // CYBER_article_count
   newsCrypto?: number;   // CRYPTO_NEWS_article_count
+  stressEA?: number;     // STRESS_CISS_EA
+  stressRO?: number;     // STRESS_CLIFS_RO
+  roSpread?: number;     // RATES_RO_DE_SPREAD
+  ceeVol?: number;       // CEEFX_avg_vol_20d
+  attnFear?: number;     // ATTN_FEAR_INDEX
 }
 export type ExtKey = Exclude<keyof ExtRow, "date">;
 export interface ExtData { rows: ExtRow[]; origin: "csv" | "live"; sources: string[]; updatedAt: string }
@@ -35,6 +41,11 @@ export const EXT_COLUMNS: Record<ExtKey, string> = {
   kevRansom: "CYBER_KEV_ransomware_count",
   newsCyber: "CYBER_article_count",
   newsCrypto: "CRYPTO_NEWS_article_count",
+  stressEA: "STRESS_CISS_EA",
+  stressRO: "STRESS_CLIFS_RO",
+  roSpread: "RATES_RO_DE_SPREAD",
+  ceeVol: "CEEFX_avg_vol_20d",
+  attnFear: "ATTN_FEAR_INDEX",
 };
 
 const num = (v: unknown) => {
@@ -105,22 +116,29 @@ export const EXT_START = "2017-08-17";
 
 export interface RawExt {
   closes: Record<string, Map<string, number>>; // simbol (BTC, ETH, …) → dată → închidere
-  kev: { dateAdded: string; knownRansomwareCampaignUse?: string }[];
+  kev: { dateAdded: string; knownRansomwareCampaignUse?: string }[] | null; // null = sursă neselectată
 }
 
 /** Pasul de colectare al scraper-ului, făcut din browser: cotații Binance zilnice + catalogul CISA KEV. */
-export async function collectRaw(start = EXT_START, onProgress?: (msg: string) => void, signal?: AbortSignal): Promise<RawExt> {
+export async function collectRaw(
+  start = EXT_START, onProgress?: (msg: string) => void, signal?: AbortSignal, pick = { crypto: true, kev: true },
+): Promise<RawExt> {
   const closes: RawExt["closes"] = {};
   let done = 0;
-  onProgress?.(`Cotații Binance: 0 din ${SYMBOLS.length} monede…`);
-  await Promise.all(SYMBOLS.map(async (s) => {
-    closes[s.replace(/USDT$/, "")] = await klines(s, start, signal);
-    onProgress?.(`Cotații Binance: ${++done} din ${SYMBOLS.length} monede…`);
-  }));
-  onProgress?.("Catalogul CISA de vulnerabilități exploatate (KEV)…");
-  const r = await fetch(KEV_URL, { signal });
-  if (!r.ok) throw new Error(`CISA KEV: HTTP ${r.status}`);
-  const kev = ((await r.json()) as { vulnerabilities: RawExt["kev"] }).vulnerabilities;
+  if (pick.crypto) {
+    onProgress?.(`Cotații Binance: 0 din ${SYMBOLS.length} monede…`);
+    await Promise.all(SYMBOLS.map(async (s) => {
+      closes[s.replace(/USDT$/, "")] = await klines(s, start, signal);
+      onProgress?.(`Cotații Binance: ${++done} din ${SYMBOLS.length} monede…`);
+    }));
+  }
+  let kev: RawExt["kev"] = null;
+  if (pick.kev) {
+    onProgress?.("Catalogul CISA de vulnerabilități exploatate (KEV)…");
+    const r = await fetch(KEV_URL, { signal });
+    if (!r.ok) throw new Error(`CISA KEV: HTTP ${r.status}`);
+    kev = ((await r.json()) as { vulnerabilities: NonNullable<RawExt["kev"]> }).vulnerabilities;
+  }
   return { closes, kev };
 }
 
@@ -163,25 +181,29 @@ export function buildFeatureTable(raw: RawExt, opts: FeatureOptions): FeatureTab
     cols.push(`CRYPTO_${a}_close`, `CRYPTO_${a}_ret_1d`, `CRYPTO_${a}_ret_7d`, `CRYPTO_${a}_ret_30d`, `CRYPTO_${a}_vol_30d`);
     data.push(c, r1, ret(7), ret(30), r1.map((_, i) => rollingStd(r1, i)));
   }
-  const avail = dates.map((_, i) => rets1.map((r) => r[i]).filter((x): x is number => x !== null));
-  const mean = avail.map((xs) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null));
-  cols.push("CRYPTO_market_mean_ret_1d", "CRYPTO_market_vol_30d", "CRYPTO_breadth_down_1d");
-  data.push(mean, mean.map((_, i) => rollingStd(mean, i)), avail.map((xs) => (xs.length ? xs.filter((x) => x < 0).length / xs.length : null)));
-  if (opts.lagCrypto) for (let k = 0; k < data.length; k++) data[k] = [null, ...data[k].slice(0, -1)];
+  if (assets.length) {
+    const avail = dates.map((_, i) => rets1.map((r) => r[i]).filter((x): x is number => x !== null));
+    const mean = avail.map((xs) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null));
+    cols.push("CRYPTO_market_mean_ret_1d", "CRYPTO_market_vol_30d", "CRYPTO_breadth_down_1d");
+    data.push(mean, mean.map((_, i) => rollingStd(mean, i)), avail.map((xs) => (xs.length ? xs.filter((x) => x < 0).length / xs.length : null)));
+    if (opts.lagCrypto) for (let k = 0; k < data.length; k++) data[k] = [null, ...data[k].slice(0, -1)];
+  }
 
   // KEV: numărat pe ziua de după adăugare (decalajul de o zi al scraper-ului)
-  const kevN = new Map<string, number>(), kevR = new Map<string, number>();
-  let first = "9999-99-99";
-  for (const v of raw.kev) {
-    if (v.dateAdded < first) first = v.dateAdded;
-    const d = nextDay(v.dateAdded);
-    kevN.set(d, (kevN.get(d) ?? 0) + 1);
-    if ((v.knownRansomwareCampaignUse ?? "").toLowerCase() === "known") kevR.set(d, (kevR.get(d) ?? 0) + 1);
+  if (raw.kev) {
+    const kevN = new Map<string, number>(), kevR = new Map<string, number>();
+    let first = "9999-99-99";
+    for (const v of raw.kev) {
+      if (v.dateAdded < first) first = v.dateAdded;
+      const d = nextDay(v.dateAdded);
+      kevN.set(d, (kevN.get(d) ?? 0) + 1);
+      if ((v.knownRansomwareCampaignUse ?? "").toLowerCase() === "known") kevR.set(d, (kevR.get(d) ?? 0) + 1);
+    }
+    const kevStart = raw.kev.length ? nextDay(first) : "";
+    const blank = (d: string) => opts.kevBlankBeforeCatalog && (!kevStart || d < kevStart);
+    cols.push("CYBER_KEV_added_count", "CYBER_KEV_ransomware_count");
+    data.push(dates.map((d) => (blank(d) ? null : kevN.get(d) ?? 0)), dates.map((d) => (blank(d) ? null : kevR.get(d) ?? 0)));
   }
-  const kevStart = raw.kev.length ? nextDay(first) : "";
-  const blank = (d: string) => opts.kevBlankBeforeCatalog && (!kevStart || d < kevStart);
-  cols.push("CYBER_KEV_added_count", "CYBER_KEV_ransomware_count");
-  data.push(dates.map((d) => (blank(d) ? null : kevN.get(d) ?? 0)), dates.map((d) => (blank(d) ? null : kevR.get(d) ?? 0)));
 
   return { columns: cols, dates, rows: dates.map((_, i) => data.map((col) => col[i])) };
 }
@@ -251,15 +273,64 @@ const std = (xs: number[]) => {
 
 export const LIVE_SOURCES = ["Binance spot (8 monede)", "CISA KEV (oglinda GitHub)"];
 export const today = () => new Date().toISOString().slice(0, 10);
-export const DEFAULT_FEATURE_OPTIONS = (): FeatureOptions => ({ start: EXT_START, end: today(), lagCrypto: true, kevBlankBeforeCatalog: true });
+/** Începutul lui train.csv: sursele cu istoric lung (ECB, Eurostat, OECD) acoperă astfel tot antrenarea. */
+export const TRAIN_START = "2000-01-01";
+export const DEFAULT_FEATURE_OPTIONS = (): FeatureOptions => ({ start: TRAIN_START, end: today(), lagCrypto: true, kevBlankBeforeCatalog: true });
+
+// ---------------------------------------------------------------- extensia completă: toate sursele alese
+/** Crypto și KEV (calculate de buildFeatureTable); restul surselor sunt în sources.ts. */
+export const BASE_SOURCES = [
+  { id: "crypto", label: "Crypto", category: "Crypto", detail: "Binance: prețuri zilnice pentru 8 monede din 2017 — randamente, volatilitate, lățimea pieței." },
+  { id: "kev", label: "Vulnerabilități exploatate", category: "Cyber", detail: "CISA KEV: vulnerabilitățile folosite în atacuri reale, pe zile, inclusiv cele din campanii ransomware." },
+];
+export const ALL_SOURCE_IDS = [...BASE_SOURCES.map((s) => s.id), ...SOURCES.map((s) => s.id)];
+export interface SourceState { state: "wait" | "run" | "ok" | "err"; cols?: number; error?: string }
+
+/** Rulează sursele alese în paralel; o sursă care eșuează nu le oprește pe celelalte. */
+export async function runExtension(
+  opts: FeatureOptions, selected: string[], onStatus: (id: string, s: SourceState) => void,
+  onProgress: (msg: string) => void = () => {}, signal?: AbortSignal,
+): Promise<{ table: FeatureTable; metas: ColMeta[] }> {
+  const err = (e: unknown) => (e instanceof Error ? e.message : String(e));
+  const base = async (id: "crypto" | "kev"): Promise<RawExt | null> => {
+    if (!selected.includes(id)) return null;
+    onStatus(id, { state: "run" });
+    try {
+      const raw = await collectRaw(opts.start, onProgress, signal, { crypto: id === "crypto", kev: id === "kev" });
+      onStatus(id, { state: "ok", cols: id === "crypto" ? Object.keys(raw.closes).length * 5 + 3 : 2 });
+      return raw;
+    } catch (e) { onStatus(id, { state: "err", error: err(e) }); return null; }
+  };
+  const ctx = { start: opts.start, end: opts.end, signal, progress: onProgress };
+  const extraP = Promise.all(SOURCES.filter((s) => selected.includes(s.id)).map(async (s) => {
+    onStatus(s.id, { state: "run" });
+    try {
+      const series = (await s.run(ctx)).filter((x) => x.points.length);
+      onStatus(s.id, { state: "ok", cols: series.length });
+      return series;
+    } catch (e) { onStatus(s.id, { state: "err", error: err(e) }); return [] as ExtSeries[]; }
+  }));
+  const [crypto, kev, extra] = await Promise.all([base("crypto"), base("kev"), extraP]);
+  const raw: RawExt = { closes: crypto?.closes ?? {}, kev: kev?.kev ?? null };
+  const flat = extra.flat();
+  let table = extendTable(buildFeatureTable(raw, opts), flat);
+  // coloanele complet goale în perioada aleasă nu ajută pe nimeni
+  const keep = table.columns.map((_, j) => table.rows.some((r) => r[j] !== null));
+  table = { ...table, columns: table.columns.filter((_, j) => keep[j]), rows: table.rows.map((r) => r.filter((_, j) => keep[j])) };
+  if (!table.columns.length) throw new Error("Nicio sursă nu a întors date pentru perioada aleasă.");
+  const extraMeta = new Map(flat.map((s) => [s.meta.name, s.meta]));
+  return { table, metas: table.columns.map((c) => extraMeta.get(c) ?? baseMeta(c, opts.lagCrypto)) };
+}
 
 /** Colectare + calcul + rândurile pentru dashboard, într-un singur pas (butonul „Colectează live”). */
-export async function collectLive(onProgress?: (msg: string) => void, opts = DEFAULT_FEATURE_OPTIONS(), signal?: AbortSignal) {
-  const raw = await collectRaw(opts.start, onProgress, signal);
-  onProgress?.("Calculez feature-urile…");
-  const table = buildFeatureTable(raw, opts);
-  const data: ExtData = { rows: featureTableToExt(table), origin: "live", sources: LIVE_SOURCES, updatedAt: new Date().toISOString() };
-  return { data, table };
+export async function collectLive(
+  onProgress?: (msg: string) => void, opts = DEFAULT_FEATURE_OPTIONS(), selected = ALL_SOURCE_IDS,
+  onStatus: (id: string, s: SourceState) => void = () => {}, signal?: AbortSignal,
+) {
+  const { table, metas } = await runExtension(opts, selected, onStatus, onProgress, signal);
+  const labels = [...BASE_SOURCES, ...SOURCES].filter((s) => selected.includes(s.id)).map((s) => s.label);
+  const data: ExtData = { rows: featureTableToExt(table), origin: "live", sources: labels.length ? labels : LIVE_SOURCES, updatedAt: new Date().toISOString() };
+  return { data, table, metas };
 }
 
 // ---------------------------------------------------------------- calitatea datelor
@@ -269,11 +340,17 @@ export function coverage(rows: ExtRow[], key: ExtKey, nonZero = false) {
 }
 
 /** Aceleași probleme găsite la verificarea scraper-ului, calculate pe datele încărcate. */
-export function qualityFlags(rows: ExtRow[], predFrom?: string, predTo?: string) {
+export function qualityFlags(rows: ExtRow[], predFrom?: string, predTo?: string, origin: ExtData["origin"] = "csv") {
   const flags: { level: "ok" | "warn"; text: string }[] = [];
   const crypto = coverage(rows, "btc");
   const kev = coverage(rows, "kev", true);
   const news = coverage(rows, "newsCyber", true) ?? coverage(rows, "newsCrypto", true);
+  const stress = coverage(rows, "stressEA");
+  if (stress) {
+    flags.push(predFrom && stress.from > predFrom
+      ? { level: "warn", text: `Stresul sistemic începe pe ${stress.from}, după începutul predicțiilor.` }
+      : { level: "ok", text: `Stresul sistemic, prima de risc și valutele regionale acoperă ${stress.from} – ${stress.to}.` });
+  }
   if (crypto) {
     flags.push(predFrom && crypto.from > predFrom
       ? { level: "warn", text: `Crypto începe abia pe ${crypto.from}; zilele dinainte nu au valori (lipsă, nu zero).` }
@@ -288,10 +365,15 @@ export function qualityFlags(rows: ExtRow[], predFrom?: string, predTo?: string)
     flags.push(outside
       ? { level: "warn", text: `Știrile acoperă doar ${news.from} – ${news.to}, în afara perioadei predicțiilor (${predFrom} – ${predTo}): nu pot ajuta modelul.` }
       : { level: "ok", text: `Știrile acoperă ${news.from} – ${news.to}.` });
-  } else if (rows.length) {
+  } else if (rows.length && origin === "csv") {
     flags.push({ level: "warn", text: "Fără știri (GDELT): coloanele de știri lipsesc sau sunt peste tot 0." });
   }
-  flags.push({ level: "warn", text: "Doar KEV și știrile sunt decalate cu o zi; închiderea crypto din aceeași zi vine după închiderea BET." });
+  if (origin === "csv") {
+    flags.push({ level: "warn", text: "În CSV-urile scraper-ului doar KEV și știrile sunt decalate cu o zi; închiderea crypto din aceeași zi vine după închiderea BET. Extensia live decalează tot." });
+  } else {
+    flags.push({ level: "ok", text: "Colectat live: fiecare valoare e pusă la data publicării (zilnic a doua zi, lunar după întârzierea reală)." });
+    flags.push({ level: "warn", text: "Datele lunare se repetă până la următoarea publicare; indicatorii OECD se revizuiesc (versiunea de azi, nu cea de atunci)." });
+  }
   return flags;
 }
 
