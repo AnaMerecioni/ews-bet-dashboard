@@ -52,7 +52,7 @@ function Explain() {
       <div>
         <PageHeader eyebrow="04 — De ce?" title="Explicabilitate" />
         <EmptyState icon={Lightbulb} title="Lipsesc factorii SHAP">
-          Încarcă fișierul <strong>drivers.csv</strong> pe pagina Date pentru a vedea ce împinge riscul, pe variabile și categorii.
+          Încarcă fișierul <strong>drivers.csv</strong> pe pagina Date pentru a vedea ce crește riscul, pe variabile și categorii.
         </EmptyState>
         <div className="mt-12 space-y-12">
           <ErrorSection />
@@ -164,7 +164,7 @@ function FeatureOverTime() {
   return (
     <ChartCard
       title="O variabilă în timp"
-      info="Contribuția SHAP a variabilei alese, zi de zi. Peste zero împinge riscul în sus."
+      info="Contribuția SHAP a variabilei alese, zi de zi. Peste zero crește riscul."
       summary={`Contribuția variabilei ${meta?.label ?? f} în intervalul selectat.`}
       table={{ headers: ["Data", "Contribuție", "Valoare"], rows: [...data].reverse().map((d) => [fmtDate(d.date), d.c === null ? "—" : fmtContrib(d.c, ews.settings.shapUnit), d.v === null ? "—" : num(d.v, 2)]) }}
       actions={

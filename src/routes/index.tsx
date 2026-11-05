@@ -139,7 +139,7 @@ function Summary() {
                   <dd className="font-display text-xl font-bold tabular-nums">{thrTxt}</dd>
                 </div>
                 <div className="rounded-xl border bg-card/60 p-3">
-                  <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Alertă EWS</dt>
+                  <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Alertă Gama</dt>
                   <dd className={cn("font-display text-xl font-bold", alert && "text-risk-up-text")}>{alert ? "activă" : above ? "neconfirmată" : "inactivă"}</dd>
                 </div>
               </dl>

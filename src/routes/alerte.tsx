@@ -18,7 +18,7 @@ export const Route = createFileRoute("/alerte")({
   head: () => ({
     meta: [
       { title: "Alerte și acțiuni · Sistem de avertizare timpurie" },
-      { name: "description", content: "Episoadele de alertă EWS pentru BET, cine decide și ce acțiune urmează." },
+      { name: "description", content: "Episoadele de alertă Gama pentru BET, cine decide și ce acțiune urmează." },
       { property: "og:title", content: "Alerte și acțiuni · Sistem de avertizare timpurie" },
       { property: "og:description", content: "De la alertă la decizie: episoade, factori, responsabili și acțiuni." },
       { property: "og:type", content: "website" },
@@ -330,7 +330,7 @@ function alertToEvent(a: Alert, ews: ReturnType<typeof useEws>): NotifEvent {
   const pb = ews.settings.playbook[a.level];
   return {
     id: a.id, createdAt: "", date: a.start, asset: ews.asset, type: "alertStart", severity: a.level === "high" ? "critic" : "avertizare",
-    title: `Alertă EWS din ${fmtDate(a.start)} (vârf ${pct(a.peak)})`, from: "fără alertă", to: a.active ? "alertă activă" : `încheiată ${fmtDate(a.end)}`,
+    title: `Alertă Gama din ${fmtDate(a.start)} (vârf ${pct(a.peak)})`, from: "fără alertă", to: a.active ? "alertă activă" : `încheiată ${fmtDate(a.end)}`,
     level: a.level, p: a.peak,
     drivers: topDrivers(ews.driversFor(a.peakDate), 3).map((d) => `${d.label ?? d.feature} (${fmtContrib(d.contribution, ews.settings.shapUnit)})`),
     action: pb.action, owner: pb.owner, read: true,

@@ -386,7 +386,7 @@ export function metadataCsv(metas: ColMeta[]) {
 /** Codul de lipit în notebook: încărcarea dataset-ului și categoriile noi pentru descompunerea Shapley. */
 export function notebookSnippet(datasetSlug = "<username>/datasprint-ews-external-features", used = EXT_CATEGORIES) {
   return [
-    "# --- Extensia EWS: date externe care îmbogățesc DataSprint ---",
+    "# --- Extensia Gama: date externe care îmbogățesc DataSprint ---",
     `EXT = pd.read_csv('/kaggle/input/${datasetSlug.split("/").pop()}/ews_external_features.csv', parse_dates=['Date'])`,
     "train = train.merge(EXT, on='Date', how='left')   # ținta stress_event_20d rămâne neschimbată",
     "test = test.merge(EXT, on='Date', how='left')",

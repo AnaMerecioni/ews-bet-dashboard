@@ -290,10 +290,10 @@ const download = (name: string, text: string, type = "text/csv;charset=utf-8") =
 const mb = (s: string) => `${num(new Blob([s]).size / 1048576, 1)} MB`;
 
 const KAGGLE_METADATA = () => JSON.stringify({
-  title: "DataSprint EWS external features (enrichment)",
+  title: "Gama — external features enriching DataSprint 2026",
   id: "REPLACE_WITH_KAGGLE_USERNAME/datasprint-ews-external-features",
   licenses: [],
-  description: "Variables that enrich the DataSprint 2026 EWS data (no overlap with train/test): ECB systemic stress (CISS, CLIFS Romania/CEE), euro and Romanian sovereign yields, CEE currencies, Romanian sentiment and activity (Eurostat), OECD leading indicators, crypto (Binance, stablecoins, Fear & Greed), cyber (CISA KEV, DeFi hacks) and Wikipedia attention. Every value is placed on the date it was already published. See ews_external_metadata.csv. Check each source's terms and set a license; replace the Kaggle username before upload.",
+  description: "Variables that enrich the DataSprint 2026 data (no overlap with train/test): ECB systemic stress (CISS, CLIFS Romania/CEE), euro and Romanian sovereign yields, CEE currencies, Romanian sentiment and activity (Eurostat), OECD leading indicators, crypto (Binance, stablecoins, Fear & Greed), cyber (CISA KEV, DeFi hacks) and Wikipedia attention. Every value is placed on the date it was already published. See ews_external_metadata.csv. Check each source's terms and set a license; replace the Kaggle username before upload.",
 }, null, 2) + "\n";
 
 const SOURCE_LIST = [...BASE_SOURCES, ...SOURCES].map(({ id, label, detail, category }) => ({ id, label, detail, category }));

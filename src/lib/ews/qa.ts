@@ -97,7 +97,7 @@ export const QUESTIONS: Question[] = [
       const d = last(c);
       if (!c.hasDrivers) return mk(["Încarcă ", { b: "drivers.csv" }, " pentru a vedea factorii care explică riscul."], { link: { to: "/date", label: "Mergi la Date" } });
       const cp = categoryPhrases(c.driversFor(d.date), 3);
-      if (!cp.items.length) return mk([`Riscul este ${LEVEL_RO[d.level].toLowerCase()} pentru că `, { b: "niciun factor nu împinge riscul în sus" }, " în această zi."], { link: { to: "/explicabilitate", label: "Vezi explicabilitatea" } });
+      if (!cp.items.length) return mk([`Riscul este ${LEVEL_RO[d.level].toLowerCase()} pentru că `, { b: "niciun factor nu crește riscul" }, " în această zi."], { link: { to: "/explicabilitate", label: "Vezi explicabilitatea" } });
       return mk([
         d.level === "low" ? "Riscul rămâne scăzut; factorii care îl cresc cel mai mult sunt: " : "Riscul este împins în sus de: ",
         { b: cp.sentence }, ".",
