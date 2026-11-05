@@ -18,7 +18,7 @@ type Point = { date: string; p: number } & Partial<Record<Key, number>>;
 const PANELS: { key: Key; title: string; short: string; fmt: (v: number) => string; color: string }[] = [
   { key: "stressEA", title: "Stres financiar sistemic în zona euro (ECB CISS)", short: "Stres sistemic zona euro", fmt: (v) => num(v, 2), color: "var(--cat-1)" },
   { key: "stressRO", title: "Stres financiar în România (ECB CLIFS, lunar)", short: "Stres financiar România", fmt: (v) => num(v, 2), color: "var(--cat-2)" },
-  { key: "roSpread", title: "Prima de risc a României: randament 10A RO − DE (p.p.)", short: "Prima de risc RO", fmt: (v) => num(v, 1), color: "var(--cat-3)" },
+  { key: "roSpread", title: "Prima de risc a României: randament 10A RO − DE (%)", short: "Prima de risc RO", fmt: (v) => `${num(v, 1)}%`, color: "var(--cat-3)" },
   { key: "ceeVol", title: "Volatilitatea valutelor din regiune (HUF, PLN, CZK, TRY)", short: "Valute regionale", fmt: (v) => pct(v, 2), color: "var(--cat-4)" },
   { key: "vol", title: "Volatilitatea pieței crypto (30 zile)", short: "Volatilitate crypto", fmt: (v) => pct(v, 1), color: "var(--cat-5)" },
   { key: "kev30", title: "Vulnerabilități exploatate noi (KEV, ultimele 30 zile)", short: "Vulnerabilități KEV", fmt: (v) => num(v), color: "var(--cat-7)" },

@@ -193,8 +193,8 @@ export const SOURCES: SourceDef[] = [
         { meta: meta("RATES_EA_2Y", "ECB YC", "zilnic", "a doua zi", "Randamentul pe 2 ani al curbei AAA a zonei euro (%)."), points: daily(y2), fill: "daily" },
         { meta: meta("RATES_EA_SLOPE_10Y2Y", "ECB YC", "zilnic", "a doua zi", "Panta curbei (10A − 2A); negativă = semnal clasic de recesiune."), points: daily(combine([y10, y2], (x) => x[0] - x[1])), fill: "daily" },
         { meta: meta("RATES_RO_10Y", "Eurostat irt_lt_mcby_m", "lunar", "1 a lunii m+2", "Randamentul obligațiunilor de stat românești pe 10 ani (medie lunară, %)."), points: monthly(ro, 2), fill: "monthly" },
-        { meta: meta("RATES_RO_10Y_chg3m", "Eurostat irt_lt_mcby_m", "lunar", "1 a lunii m+2", "Variația pe 3 luni a randamentului românesc pe 10 ani (p.p.)."), points: monthly(changeN(ro, 3), 2), fill: "monthly" },
-        { meta: meta("RATES_RO_DE_SPREAD", "Eurostat irt_lt_mcby_m", "lunar", "1 a lunii m+2", "Prima de risc a României: randament RO 10A − DE 10A (p.p.)."), points: monthly(combine([ro, de], (x) => x[0] - x[1]), 2), fill: "monthly" },
+        { meta: meta("RATES_RO_10Y_chg3m", "Eurostat irt_lt_mcby_m", "lunar", "1 a lunii m+2", "Variația pe 3 luni a randamentului românesc pe 10 ani (%)."), points: monthly(changeN(ro, 3), 2), fill: "monthly" },
+        { meta: meta("RATES_RO_DE_SPREAD", "Eurostat irt_lt_mcby_m", "lunar", "1 a lunii m+2", "Prima de risc a României: randament RO 10A − DE 10A (%)."), points: monthly(combine([ro, de], (x) => x[0] - x[1]), 2), fill: "monthly" },
       ];
     },
   },

@@ -11,7 +11,8 @@ const minus = (x: number) => (x < 0 ? "−" : "");
 
 export const pct = (p: number, d = 1) => `${minus(p)}${nf(d).format(Math.abs(p * 100))}%`;
 export const num = (x: number, d = 0) => `${minus(x)}${nf(d).format(Math.abs(x))}`;
-export const pp = (x: number, d = 1) => `${x > 0 ? "+" : minus(x)}${nf(d).format(Math.abs(x * 100))} p.p.`;
+/** Variația probabilității, afișată în procente ("−2,7%"), nu în „p.p.”. */
+export const pp = (x: number, d = 1) => `${x > 0 ? "+" : minus(x)}${nf(d).format(Math.abs(x * 100))}%`;
 /** Contribuția unui factor: în procente simple ("+9,2%"), nu în „p.p.”, ca să fie ușor de citit de management. */
 export const fmtContrib = (x: number, unit: "pp" | "logit") =>
   unit === "pp"

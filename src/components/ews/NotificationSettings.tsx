@@ -65,7 +65,7 @@ export function NotificationSettings() {
     setSending(true);
     const ev: NotifEvent = {
       id: "test", createdAt: new Date().toISOString(), date: new Date().toISOString().slice(0, 10), asset: "", type: "level", severity: "info",
-      title: "E-mail de test — Sistem de avertizare timpurie", from: "—", to: "—", level: "moderate", p: 0.184, drivers: ["Indicele VIX (+3,1 p.p.)"],
+      title: "E-mail de test — Sistem de avertizare timpurie", from: "—", to: "—", level: "moderate", p: 0.184, drivers: ["Indicele VIX (+3,1%)"],
       action: settings.playbook.moderate.action, owner: settings.playbook.moderate.owner, read: true,
     };
     try {
@@ -106,7 +106,7 @@ export function NotificationSettings() {
           <Toggle label="Pe e-mail (EmailJS)" desc="Un singur e-mail de rezumat la fiecare încărcare de date." checked={n.email} onChange={(v) => updateNotif({ email: v })} />
           <SevSelect label="Severitate minimă (aplicație/browser)" value={n.minSeverity} onChange={(v) => updateNotif({ minSeverity: v })} />
           <label className="flex items-center justify-between gap-3 py-3 text-sm font-medium">
-            Salt de probabilitate (p.p.)
+            Salt de probabilitate (%)
             <input type="number" min={1} max={50} value={n.jumpPP} onChange={(e) => updateNotif({ jumpPP: Math.max(1, Number(e.target.value) || 5) })}
               className="min-h-11 w-20 rounded-md border bg-card px-2 text-right" />
           </label>

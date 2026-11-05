@@ -95,7 +95,7 @@ export function detectEvents(
     const diff = next.p - prevDayP;
     if (Math.abs(diff) * 100 >= jumpPP) {
       add("jump", diff > 0 ? (diff * 100 >= jumpPP * 2 ? "critic" : "avertizare") : "info",
-        `Probabilitatea a ${diff > 0 ? "crescut" : "scăzut"} cu ${num(Math.abs(diff) * 100, 1)} p.p. într-o zi`, pct(prevDayP), pct(next.p));
+        `Probabilitatea a ${diff > 0 ? "crescut" : "scăzut"} cu ${num(Math.abs(diff) * 100, 1)}% într-o zi`, pct(prevDayP), pct(next.p));
     }
   }
   if (prev.alert !== next.alert || Math.abs(prev.high - next.high) > 1e-9) {
