@@ -578,6 +578,11 @@ export function ExtensionSection() {
         <Card className="space-y-3">
           <h3 className="font-display text-lg font-semibold">Ai rulat scraper-ul local?</h3>
           <p className="text-sm text-muted-foreground">Încarcă CSV-urile lui (cu știri și piețe incluse); se adaugă peste ce a colectat extensia.</p>
+          <a href={import.meta.env.BASE_URL + "scraper_ews.py"} download="scraper_ews.py"
+            className="inline-flex min-h-10 items-center gap-2 rounded-full border border-primary/60 px-4 text-sm font-semibold text-primary hover:bg-primary/10">
+            <Download aria-hidden className="size-4" /> Descarcă scraperul Python
+          </a>
+          <p className="text-xs text-muted-foreground">Script local, separat de extensia live; necesită Python, pandas și requests.</p>
           <Drop accept=".csv,text/csv" multiple icon={Puzzle} label="Încarcă CSV-urile scraper-ului" hint="din folderul kaggle_upload" onFiles={(f) => void handle(f)} />
           {ext && (
             <button onClick={() => extensionStore.set(null)} className="inline-flex min-h-11 items-center gap-2 rounded-md px-2 text-sm text-destructive hover:bg-muted">
