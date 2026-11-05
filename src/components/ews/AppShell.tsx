@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, useRouter } from "@tanstack/react-router";
 import {
   BellRing, Database, FileText, FlaskConical, Info, LayoutDashboard, Lightbulb, PanelLeftClose, PanelLeftOpen, Settings,
 } from "lucide-react";
@@ -28,7 +28,16 @@ const PRESET_LABEL: Record<string, string> = { "3L": "Ultimele 3 luni", "6L": "U
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const path = useRouterState({ select: (s) => s.location.pathname });
+  // Pe GitHub Pages orice adresă primește același HTML pre-randat pentru „/”, iar componentele <Link>
+  // rămân la starea din hidratare. Urmărim calea direct din router, după fiecare navigare rezolvată.
+  const router = useRouter();
+  const [path, setPath] = useState<string | null>(null);
+  useEffect(() => {
+    const update = () => setPath(router.state.resolvedLocation?.pathname ?? router.state.location.pathname);
+    update();
+    return router.subscribe("onResolved", update);
+  }, [router]);
+  const isActive = (to: string) => path !== null && (to === "/" ? path === "/" : path.startsWith(to));
   const ews = useEws();
   useScrollFx();
 
@@ -64,14 +73,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               </span>
             )}
           </div>
-          <nav className="flex-1 space-y-1 p-3">
+          <nav key={path ?? "ssr"} className="flex-1 space-y-1 p-3">
             {NAV.map(({ to, label, Icon }) => {
-              const active = to === "/" ? path === "/" : path.startsWith(to);
+              const active = isActive(to);
               return (
                 <Link
                   key={to}
                   to={to}
                   title={collapsed ? label : undefined}
+                  activeProps={{}}
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "flex min-h-11 items-center gap-3 rounded-lg border-l-2 px-3 text-sm transition-colors",
@@ -193,11 +203,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <nav aria-label="Navigare principală" className="fixed inset-x-0 bottom-0 z-40 glass-bar grid grid-cols-7 border-t bg-sidebar/90 backdrop-blur-xl md:hidden print:hidden">
+      <nav key={path ?? "ssr"} aria-label="Navigare principală" className="fixed inset-x-0 bottom-0 z-40 glass-bar grid grid-cols-7 border-t bg-sidebar/90 backdrop-blur-xl md:hidden print:hidden">
         {NAV.map(({ to, short, label, Icon }) => {
-          const active = to === "/" ? path === "/" : path.startsWith(to);
+          const active = isActive(to);
           return (
-            <Link key={to} to={to} aria-label={label} aria-current={active ? "page" : undefined}
+            <Link key={to} to={to} aria-label={label} activeProps={{}} aria-current={active ? "page" : undefined}
               className={cn("flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px]", active ? "text-primary font-semibold" : "text-muted-foreground")}>
               <Icon aria-hidden className="size-5" />
               {short}
