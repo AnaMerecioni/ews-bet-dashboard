@@ -91,7 +91,7 @@ function Overview() {
               </dd>
             </div>
             <div className="rounded-lg bg-muted p-3">
-              <dt className="text-muted-foreground">Alertă EWS</dt>
+              <dt className="text-muted-foreground">Alertă Gama</dt>
               <dd className="mt-1 text-base font-semibold">
                 {activeAlert ? (
                   <span className="flex items-center gap-1 text-risk-up-text"><BellRing aria-hidden className="size-4" /> Activă din {fmtDate(activeAlert.start)}</span>
@@ -128,7 +128,7 @@ function Overview() {
       <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         <ChartCard
           id="tour-drivers"
-          title="Ce împinge riscul azi"
+          title="Ce crește riscul de azi"
           info={<>Contribuțiile SHAP: cât adaugă (roșu ▲) sau scade (albastru ▼) fiecare variabilă din probabilitatea zilei {fmtDate(selectedDate)}.</>}
           summary={top5.map((t) => `${t.label ?? t.feature}: ${fmtContrib(t.contribution, settings.shapUnit)}`).join("; ")}
           table={{ headers: ["Factor", "Categorie", "Contribuție"], rows: top5.map((t) => [t.label ?? t.feature, t.category, fmtContrib(t.contribution, settings.shapUnit)]) }}
@@ -181,7 +181,7 @@ function Overview() {
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-1">
               <h2 id="recent-h" className="text-base font-semibold">Alerte recente</h2>
-              <InfoTip term="Alertă EWS">
+              <InfoTip term="Alertă Gama">
                 Se declanșează când probabilitatea depășește pragul de alertă ({pct(thr.alert, 0)}) {settings.confirmDays} zile consecutive.
               </InfoTip>
             </div>

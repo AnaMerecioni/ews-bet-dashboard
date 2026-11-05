@@ -1,13 +1,14 @@
 import { useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  BellRing, Database, FileText, FlaskConical, Info, LayoutDashboard, Lightbulb, PanelLeftClose, PanelLeftOpen, Settings, Activity,
+  BellRing, Database, FileText, FlaskConical, Info, LayoutDashboard, Lightbulb, PanelLeftClose, PanelLeftOpen, Settings,
 } from "lucide-react";
 import { useEws, type RangePreset } from "@/lib/ews/store";
 import { useScrollFx } from "@/lib/ews/scrollFx";
 import { fmtDate } from "@/lib/ews/format";
 import { cn } from "@/lib/utils";
 import { NotificationCenter } from "./NotificationCenter";
+import { GamaMark } from "./GamaMark";
 import { AskPalette, ManagementStrip } from "./Ask";
 import { PresentationButton } from "./Presentation";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -55,12 +56,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           aria-label="Navigare principală"
         >
           <div className="flex h-20 items-center gap-3 px-5">
-            <span className="glow-primary flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Activity aria-hidden className="size-5" />
-            </span>
+            <GamaMark className="size-10 shrink-0 rounded-xl shadow-[0_0_26px_-4px_#39ff14]" />
             {!collapsed && (
               <span className="min-w-0 leading-tight">
-                <span className="block font-display text-base font-bold">Gama</span>
+                <span className="block font-display text-lg font-bold tracking-tight">Gama</span>
                 <span className="block text-xs text-muted-foreground">Sistem de avertizare timpurie</span>
               </span>
             )}

@@ -23,7 +23,7 @@ export function Hero({ target = "raport" }: { target?: string }) {
   if (!last) return null;
   const stats = [
     { v: num(fullSeries.length), l: "zile analizate" },
-    hasOutcomes ? { v: num(episodes.length), l: "episoade de stres" } : { v: num(alerts.length), l: "alerte EWS" },
+    hasOutcomes ? { v: num(episodes.length), l: "episoade de stres" } : { v: num(alerts.length), l: "alerte Gama" },
     { v: num(categories.length), l: "categorii de risc" },
     { v: pct(last.p, 1), l: "risc azi" },
   ];
@@ -40,7 +40,7 @@ export function Hero({ target = "raport" }: { target?: string }) {
       <div className="px-6 pb-12 pt-10 sm:px-10 md:pb-16 md:pt-14">
         <p className="reveal eyebrow inline-flex items-center gap-2 rounded-full border bg-card px-4 py-1.5 max-sm:tracking-[0.16em]">
           <span aria-hidden className="pulse-dot inline-block size-2 rounded-full bg-risk-high text-risk-high" />
-          Live · Early warning system
+          Live · Gama
         </p>
         <p className="mt-6 font-display text-[clamp(2.75rem,7vw,6.75rem)] font-bold leading-[0.95] tracking-tight">
           <span className="reveal block" style={delay(80)}>Riscurile,</span>

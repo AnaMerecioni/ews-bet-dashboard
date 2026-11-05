@@ -88,9 +88,9 @@ export function detectEvents(
       `Risc ${up ? "în creștere" : "în scădere"}: ${LEVEL_RO[prev.level]} → ${LEVEL_RO[next.level]}`, LEVEL_RO[prev.level], LEVEL_RO[next.level]);
   }
   if (next.alertActive && (!prev.alertActive || prev.alertStart !== next.alertStart)) {
-    add("alertStart", next.level === "high" ? "critic" : "avertizare", `Alertă EWS nouă din ${fmtDate(next.alertStart ?? next.date)}`, "fără alertă", "alertă activă");
+    add("alertStart", next.level === "high" ? "critic" : "avertizare", `Alertă Gama nouă din ${fmtDate(next.alertStart ?? next.date)}`, "fără alertă", "alertă activă");
   }
-  if (!next.alertActive && prev.alertActive) add("alertEnd", "info", "Alerta EWS s-a încheiat", "alertă activă", "fără alertă");
+  if (!next.alertActive && prev.alertActive) add("alertEnd", "info", "Alerta Gama s-a încheiat", "alertă activă", "fără alertă");
   if (prevDayP !== null) {
     const diff = next.p - prevDayP;
     if (Math.abs(diff) * 100 >= jumpPP) {
