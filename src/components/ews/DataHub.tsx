@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, Copy, Download, FileSpreadsheet, FileUp, Loader2, NotebookPen, Play, Puzzle, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useEws } from "@/lib/ews/store";
@@ -6,10 +6,10 @@ import { parseCsv } from "@/lib/ews/parse";
 import type { FileKind } from "@/lib/ews/types";
 import { fmtDate, num } from "@/lib/ews/format";
 import {
-  ALL_SOURCE_IDS, augmentCsv, BASE_SOURCES, collectLive, coverage, DEFAULT_FEATURE_OPTIONS, extensionStore, featureTableToCsv, isExtensionCsv, mergeRows,
-  parseExtensionCsv, qualityFlags, today, TRAIN_START, useExtension, type FeatureOptions, type FeatureTable, type SourceState,
+  ALL_SOURCE_IDS, BASE_SOURCES, collectLive, combineDataSprint, coverage, DEFAULT_FEATURE_OPTIONS, extensionStore, featureTableToCsv, isExtensionCsv, mergeRows,
+  parseDataSprint, parseExtensionCsv, qualityFlags, today, TRAIN_START, useExtension, type DsFile, type FeatureOptions, type FeatureTable, type SourceState,
 } from "@/lib/ews/extension";
-import { DATASPRINT_COLUMNS, DATASPRINT_PREFIXES, EXT_CATEGORIES, metadataCsv, notebookSnippet, SOURCES, type ColMeta } from "@/lib/ews/sources";
+import { COMBINED_FILE, DATASPRINT_COLUMNS, DATASPRINT_PREFIXES, EXT_CATEGORIES, metadataCsv, notebookSnippet, SOURCES, type ColMeta } from "@/lib/ews/sources";
 import { analyzeNotebook, notebookStore, useNotebook } from "@/lib/ews/notebook";
 import { Card } from "./ui";
 import { cn } from "@/lib/utils";
@@ -290,10 +290,10 @@ const download = (name: string, text: string, type = "text/csv;charset=utf-8") =
 const mb = (s: string) => `${num(new Blob([s]).size / 1048576, 1)} MB`;
 
 const KAGGLE_METADATA = () => JSON.stringify({
-  title: "Gama — external features enriching DataSprint 2026",
-  id: "REPLACE_WITH_KAGGLE_USERNAME/datasprint-ews-external-features",
+  title: "Gama - DataSprint 2026 enriched",
+  id: "REPLACE_WITH_KAGGLE_USERNAME/gama-datasprint-enriched",
   licenses: [],
-  description: "Variables that enrich the DataSprint 2026 data (no overlap with train/test): ECB systemic stress (CISS, CLIFS Romania/CEE), euro and Romanian sovereign yields, CEE currencies, Romanian sentiment and activity (Eurostat), OECD leading indicators, crypto (Binance, stablecoins, Fear & Greed), cyber (CISA KEV, DeFi hacks) and Wikipedia attention. Every value is placed on the date it was already published. See ews_external_metadata.csv. Check each source's terms and set a license; replace the Kaggle username before upload.",
+  description: "datasprint_gama_enriched.csv: the DataSprint 2026 train and test rows (column split) with every original column unchanged, plus variables that enrich them (no overlap): ECB systemic stress (CISS, CLIFS Romania/CEE), euro and Romanian sovereign yields, CEE currencies, Romanian sentiment and activity (Eurostat), OECD leading indicators, crypto (Binance, stablecoins, Fear & Greed), cyber (CISA KEV, DeFi hacks) and Wikipedia attention. Each external value is placed on the date it was already published. Contains competition data: keep this dataset PRIVATE. Replace the Kaggle username before upload.",
 }, null, 2) + "\n";
 
 const SOURCE_LIST = [...BASE_SOURCES, ...SOURCES].map(({ id, label, detail, category }) => ({ id, label, detail, category }));
@@ -306,37 +306,45 @@ function SourceStatus({ s }: { s?: SourceState }) {
   return <span className="inline-flex items-center gap-1 text-xs text-risk-moderate" title={s.error}><AlertTriangle aria-hidden className="size-3" /> eșuat</span>;
 }
 
-/** Secțiunea care pornește extensia și generează fișierele pentru Kaggle. */
+/** Secțiunea care pornește extensia și dă UN SINGUR CSV: DataSprint (train + test) îmbogățit cu datele extensiei. */
 function ExtensionRunner() {
   const live = useLiveCollect();
   const [opts, setOpts] = useState<FeatureOptions>(DEFAULT_FEATURE_OPTIONS);
   const [sel, setSel] = useState<string[]>(ALL_SOURCE_IDS);
-  const [out, setOut] = useState<{ csv: string; meta: string; table: FeatureTable; metas: ColMeta[] } | null>(null);
-  const [aug, setAug] = useState<{ name: string; csv: string; note: string }[]>([]);
+  const [out, setOut] = useState<{ table: FeatureTable; metas: ColMeta[] } | null>(null);
+  const [ds, setDs] = useState<DsFile[]>([]);
 
   const start = async () => {
-    setAug([]);
     const r = await live.run(opts, sel);
-    if (r) setOut({ csv: featureTableToCsv(r.table), meta: metadataCsv(r.metas), table: r.table, metas: r.metas });
+    if (r) setOut(r);
   };
+  const addDs = async (files: File[]) => {
+    const next = [...ds];
+    for (const f of files) {
+      try {
+        const d = parseDataSprint(await f.text(), f.name);
+        const i = next.findIndex((x) => x.kind === d.kind);
+        if (i >= 0) next[i] = d; else next.push(d);
+        toast.success(`${f.name}: ${num(d.rows.length)} rânduri (${d.kind}).`);
+      } catch (e) { toast.error(`${f.name}: ${e instanceof Error ? e.message : String(e)}`); }
+    }
+    setDs(next);
+    // perioada extensiei acoperă tot ce e în DataSprint
+    if (next.length) {
+      const from = next.map((d) => d.from).sort()[0];
+      if (from < opts.start) setOpts((o) => ({ ...o, start: from }));
+    }
+  };
+  // fișierul unic se reface singur dacă adaugi DataSprint după rulare
+  const combined = useMemo(() => (out && ds.length ? combineDataSprint(ds, out.table) : null), [out, ds]);
+  const featuresCsv = useMemo(() => (out ? featureTableToCsv(out.table) : ""), [out]);
   const toggle = (id: string) => setSel((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   const overlap = out ? out.table.columns.filter((c) => DATASPRINT_COLUMNS.includes(c) || DATASPRINT_PREFIXES.some((p) => c.startsWith(p))) : [];
   const usedCats = out ? EXT_CATEGORIES.filter(([p]) => out.table.columns.some((c) => c.startsWith(p))) : EXT_CATEGORIES;
-  const snippet = notebookSnippet(undefined, usedCats);
+  const snippet = notebookSnippet(undefined, usedCats, ds.length > 0);
+  const train = ds.find((d) => d.kind === "train");
   const copy = async () => {
     try { await navigator.clipboard.writeText(snippet); toast.success("Codul a fost copiat."); } catch { toast.error("Nu am putut copia; selectează textul manual."); }
-  };
-  const augment = async (files: File[]) => {
-    if (!out) return;
-    const done: typeof aug = [];
-    for (const f of files) {
-      try {
-        const r = augmentCsv(await f.text(), out.table);
-        done.push({ name: f.name.replace(/\.csv$/i, "") + "_augmented.csv", csv: r.csv,
-          note: `${num(r.total)} rânduri, ${num(r.matched)} cu date externe, +${r.added} coloane${r.skipped ? ` (${r.skipped} existau deja)` : ""}` });
-      } catch (e) { toast.error(`${f.name}: ${e instanceof Error ? e.message : String(e)}`); }
-    }
-    setAug((a) => [...a.filter((x) => !done.some((d) => d.name === x.name)), ...done]);
   };
   const opt = (k: "lagCrypto" | "kevBlankBeforeCatalog", label: string, hint: string) => (
     <label className="flex items-start gap-3 text-sm">
@@ -344,20 +352,42 @@ function ExtensionRunner() {
       <span><span className="font-medium">{label}</span><span className="block text-xs text-muted-foreground">{hint}</span></span>
     </label>
   );
+  const step = (n: number, t: string) => <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{n} · {t}</p>;
 
   return (
     <Card className="bg-hero lg:col-span-3" aria-labelledby="run-h">
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="space-y-4">
-          <h3 id="run-h" className="font-display text-xl font-semibold">Pornește extensia → CSV pentru Kaggle</h3>
-          <p className="text-sm text-muted-foreground">
-            Extensia aduce doar ce <strong>lipsește</strong> din DataSprint — stres financiar sistemic, prima de risc a României, valutele din regiune,
-            sentimentul economic, ciclul global, crypto, atacuri cibernetice și atenția publică — și îți dă <code>ews_external_features.csv</code> gata de încărcat în Kaggle.
-            Fiecare valoare apare doar de la data la care era deja publicată.
-          </p>
+        <div className="space-y-5">
+          <div>
+            <h3 id="run-h" className="font-display text-xl font-semibold">Pornește extensia → un singur CSV</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Rezultatul e <strong>un singur fișier</strong>: datele DataSprint (train + test), neschimbate, plus tot ce aduce extensia de pe net —
+              stres financiar, prima de risc a României, valute din regiune, sentiment economic, ciclu global, crypto, atacuri cibernetice, atenție publică —
+              lipite pe fiecare zi. Fiecare valoare externă apare doar de la data la care era deja publicată.
+            </p>
+          </div>
+
+          <div>
+            {step(1, "Datele DataSprint")}
+            <Drop accept=".csv,text/csv" multiple icon={Upload} label={ds.length ? "Înlocuiește train.csv / test.csv" : "Adaugă train.csv și test.csv"}
+              hint="rămân doar în browserul tău" onFiles={(f) => void addDs(f)} />
+            {ds.length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {ds.map((d) => (
+                  <li key={d.kind} className="inline-flex items-center gap-2 rounded-full border bg-card/70 px-3 py-1 text-xs">
+                    <CheckCircle2 aria-hidden className="size-3.5 text-risk-low" />
+                    <span className="font-mono">{d.name}</span>
+                    <span className="text-muted-foreground">{d.kind} · {num(d.rows.length)} rânduri · {d.from.slice(0, 4)}–{d.to.slice(0, 4)}</span>
+                    <button type="button" onClick={() => setDs(ds.filter((x) => x !== d))} aria-label={`Elimină ${d.name}`} className="-mr-1 rounded-full px-1 text-muted-foreground hover:text-foreground">×</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
           <fieldset>
             <legend className="mb-2 flex w-full items-center justify-between font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              Surse
+              2 · Surse de pe net
               <span className="normal-case tracking-normal">
                 <button type="button" onClick={() => setSel(ALL_SOURCE_IDS)} className="min-h-8 px-1 text-xs text-primary hover:underline">toate</button> ·{" "}
                 <button type="button" onClick={() => setSel([])} className="min-h-8 px-1 text-xs text-primary hover:underline">niciuna</button>
@@ -380,20 +410,27 @@ function ExtensionRunner() {
               ))}
             </ul>
           </fieldset>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-sm">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">De la</span>
-              <input type="date" value={opts.start} min="2000-01-01" max={opts.end} onChange={(e) => setOpts({ ...opts, start: e.target.value || TRAIN_START })}
-                className="mt-1 block min-h-11 w-full rounded-lg border border-input bg-card px-2" />
-            </label>
-            <label className="text-sm">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Până la</span>
-              <input type="date" value={opts.end} min={opts.start} max={today()} onChange={(e) => setOpts({ ...opts, end: e.target.value || today() })}
-                className="mt-1 block min-h-11 w-full rounded-lg border border-input bg-card px-2" />
-            </label>
+
+          <div>
+            {step(3, "Perioadă și corecții")}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="text-sm">
+                <span className="text-xs text-muted-foreground">De la</span>
+                <input type="date" value={opts.start} min="2000-01-01" max={opts.end} onChange={(e) => setOpts({ ...opts, start: e.target.value || TRAIN_START })}
+                  className="mt-1 block min-h-11 w-full rounded-lg border border-input bg-card px-2" />
+              </label>
+              <label className="text-sm">
+                <span className="text-xs text-muted-foreground">Până la</span>
+                <input type="date" value={opts.end} min={opts.start} max={today()} onChange={(e) => setOpts({ ...opts, end: e.target.value || today() })}
+                  className="mt-1 block min-h-11 w-full rounded-lg border border-input bg-card px-2" />
+              </label>
+            </div>
+            <div className="mt-3 space-y-2">
+              {opt("lagCrypto", "Decalează crypto cu o zi (recomandat)", "Închiderea zilnică Binance (00:00 UTC) vine după închiderea BET; fără decalaj modelul ar vedea câteva ore din viitor.")}
+              {opt("kevBlankBeforeCatalog", "KEV gol înainte de noiembrie 2021 (recomandat)", "Catalogul nu exista; 0 ar spune greșit „nicio vulnerabilitate”.")}
+            </div>
           </div>
-          {opt("lagCrypto", "Decalează crypto cu o zi (recomandat)", "Închiderea zilnică Binance (00:00 UTC) vine după închiderea BET; fără decalaj modelul ar vedea câteva ore din viitor.")}
-          {opt("kevBlankBeforeCatalog", "KEV gol înainte de noiembrie 2021 (recomandat)", "Catalogul nu exista; 0 ar spune greșit „nicio vulnerabilitate”.")}
+
           <button onClick={() => void start()} disabled={live.busy || !sel.length}
             className="glow-primary inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-6 font-display font-semibold text-primary-foreground disabled:opacity-60">
             {live.busy ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Play aria-hidden className="size-4" />}
@@ -404,15 +441,18 @@ function ExtensionRunner() {
 
         <div className="space-y-4">
           {!out ? (
-            <div className="flex h-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+            <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
               <FileSpreadsheet aria-hidden className="size-8 text-primary" />
-              <p>După rulare apar aici fișierele pentru Kaggle.</p>
-              <p className="text-xs">Nu dublează nimic din DataSprint: indicii, VIX, cursul RON, ROBOR, petrolul, aurul, riscul geopolitic, inflația, PIB-ul sunt deja în <code>train.csv</code>.</p>
+              <p>După rulare primești aici <code>{COMBINED_FILE}</code>: un singur fișier cu tot.</p>
+              <p className="text-xs">Nu dublează nimic din DataSprint: indicii, VIX, cursul RON, ROBOR, petrolul, aurul, riscul geopolitic, inflația, PIB-ul sunt deja acolo.</p>
             </div>
           ) : (
             <>
               <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border bg-border">
-                {[["zile", num(out.table.dates.length)], ["variabile noi", num(out.table.columns.length)], ["perioadă", `${out.table.dates[0]?.slice(0, 4)}–${out.table.dates.at(-1)?.slice(0, 4)}`]].map(([k, v]) => (
+                {(combined
+                  ? [["rânduri", num(combined.rows)], ["coloane", `${num(combined.dsColumns)} + ${num(combined.extColumns)}`], ["train / test", `${num(combined.train)} / ${num(combined.test)}`]]
+                  : [["zile", num(out.table.dates.length)], ["variabile noi", num(out.table.columns.length)], ["perioadă", `${out.table.dates[0]?.slice(0, 4)}–${out.table.dates.at(-1)?.slice(0, 4)}`]]
+                ).map(([k, v]) => (
                   <div key={k} className="flex flex-col-reverse bg-card px-4 py-3">
                     <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{k}</dt>
                     <dd className="font-display text-2xl font-bold tabular-nums">{v}</dd>
@@ -421,21 +461,51 @@ function ExtensionRunner() {
               </dl>
               <ul className="space-y-1.5">
                 <Check ok={overlap.length === 0}>
-                  {overlap.length === 0 ? "Doar îmbogățire: nicio variabilă nu dublează coloanele sau categoriile DataSprint." : <>Se suprapun cu DataSprint: {overlap.join(", ")}.</>}
+                  {overlap.length === 0 ? "Doar îmbogățire: nicio variabilă nouă nu dublează coloanele sau categoriile DataSprint." : <>Se suprapun cu DataSprint: {overlap.join(", ")}.</>}
                 </Check>
-                <Check ok>Fiecare valoare apare de la data publicării (zilnic: a doua zi; lunar: după întârzierea reală de publicare) — vezi <code>disponibil_din</code> în metadate.</Check>
+                {combined && train && (
+                  <Check ok={combined.targets === train.rows.filter((r) => (r[train.header.indexOf("stress_event_20d")] ?? "").trim() !== "").length}>
+                    Ținta <code>stress_event_20d</code> e neschimbată ({num(combined.targets)} valori în train); la test e goală, ca în concurs.
+                  </Check>
+                )}
+                {combined && (
+                  <Check ok={combined.matched === combined.rows}>
+                    {num(combined.matched)} din {num(combined.rows)} zile au primit datele extensiei
+                    {combined.matched < combined.rows ? " (restul sunt în afara perioadei alese)" : ""}.
+                  </Check>
+                )}
+                <Check ok>Fiecare valoare externă apare de la data publicării (zilnic: a doua zi; lunar: după întârzierea reală).</Check>
               </ul>
-              <ul className="space-y-2">
-                <DownloadRow name="ews_external_features.csv" note={`${out.table.columns.length} variabile · ${mb(out.csv)}`} onClick={() => download("ews_external_features.csv", out.csv)} />
-                <DownloadRow name="ews_external_metadata.csv" note="variabilă, categorie, sursă, frecvență, de când e disponibilă, descriere" onClick={() => download("ews_external_metadata.csv", out.meta)} />
-                <DownloadRow name="dataset-metadata.json" note="pentru kaggle datasets create (schimbă usernameul)" onClick={() => download("dataset-metadata.json", KAGGLE_METADATA(), "application/json")} />
-                {aug.map((a) => <DownloadRow key={a.name} name={a.name} note={`${a.note} · ${mb(a.csv)}`} onClick={() => download(a.name, a.csv)} />)}
-              </ul>
-              <Drop accept=".csv,text/csv" multiple icon={Upload} label="Opțional: adaugă train.csv / test.csv"
-                hint="primești train_augmented.csv / test_augmented.csv (ținta rămâne neatinsă)" onFiles={(f) => void augment(f)} />
+
+              {combined ? (
+                <div className="rounded-2xl border border-primary/50 bg-primary/10 p-4">
+                  <p className="font-mono text-sm">{COMBINED_FILE}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    DataSprint (train + test, coloana <code>split</code>) + {num(combined.extColumns)} variabile noi · {mb(combined.csv)}
+                  </p>
+                  <button onClick={() => download(COMBINED_FILE, combined.csv)}
+                    className="glow-primary mt-3 inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-6 font-display font-semibold text-primary-foreground">
+                    <Download aria-hidden className="size-4" /> Descarcă CSV-ul complet
+                  </button>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed p-4 text-sm">
+                  <p className="font-medium">Adaugă <code>train.csv</code> și <code>test.csv</code> (pasul 1) ca să primești fișierul unic.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Se face pe loc, fără să rulezi extensia din nou.</p>
+                </div>
+              )}
+
+              <details className="rounded-2xl border bg-card/60 p-4 text-sm">
+                <summary className="cursor-pointer font-medium">Alte fișiere (opțional)</summary>
+                <ul className="mt-3 space-y-2">
+                  <DownloadRow name="ews_external_metadata.csv" note="ce înseamnă fiecare variabilă nouă, sursa și de când e disponibilă" onClick={() => download("ews_external_metadata.csv", metadataCsv(out.metas))} />
+                  <DownloadRow name="ews_external_features.csv" note={`doar variabilele noi · ${mb(featuresCsv)}`} onClick={() => download("ews_external_features.csv", featuresCsv)} />
+                  <DownloadRow name="dataset-metadata.json" note="pentru kaggle datasets create (schimbă usernameul)" onClick={() => download("dataset-metadata.json", KAGGLE_METADATA(), "application/json")} />
+                </ul>
+              </details>
               <p className="text-xs text-muted-foreground">
-                În Kaggle: <strong>Datasets → New Dataset</strong> și încarci fișierele, apoi în notebook le adaugi ca input.
-                Fișierele concursului (train/test) țin-le într-un dataset <strong>privat</strong>.
+                În Kaggle: <strong>Datasets → New Dataset</strong>, încarci fișierul și îl adaugi ca input în notebook. Pentru că fișierul unic conține datele
+                concursului (inclusiv ținta), dataset-ul trebuie să fie <strong>privat</strong>.
               </p>
             </>
           )}
