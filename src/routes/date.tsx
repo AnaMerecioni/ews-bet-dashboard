@@ -48,7 +48,7 @@ function DataPage() {
       <PageHeader
         eyebrow="06 — Surse de date"
         title="Date"
-        desc="Fișierele se citesc doar în browserul tău și se păstrează local. Nimic nu este trimis pe un server."
+        desc="Încarcă train.csv și test.csv în extensie pentru a genera un singur CSV îmbogățit, pregătit pentru model."
         actions={
           <AlertDialog>
             <AlertDialogTrigger className="inline-flex min-h-11 items-center gap-2 rounded-md border bg-card px-4 text-sm font-medium text-destructive hover:bg-muted">
@@ -67,31 +67,34 @@ function DataPage() {
           </AlertDialog>
         }
       />
-      <KaggleBundle />
+      <ExtensionSection />
+      <details className="rounded-2xl border bg-card px-5 py-4">
+        <summary className="cursor-pointer font-semibold">Alte instrumente pentru dashboard (opțional)</summary>
+        <div className="space-y-6 pt-5">
+          <KaggleBundle />
       <Card aria-labelledby="cov-h">
-        <h2 id="cov-h" className="text-base font-semibold">Acoperirea datelor {ews.isDemo && <span className="font-normal text-muted-foreground">(demonstrative)</span>}</h2>
-        <dl className="mt-3 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-5">
-          {[
-            ["Perioadă", `${fmtDate(s[0]?.date ?? "")} – ${fmtDate(ews.lastDate)}`],
-            ["Zile de predicție", num(s.length)],
-            ["Active", ews.assets.filter(Boolean).join(", ") || "BET (implicit)"],
-            ["Goluri în serie", num(missing)],
-            ["Fișiere opționale", [ews.hasDrivers && "factori", ews.hasOutcomes && "rezultate", ews.sensitivity && "sensibilitate"].filter(Boolean).join(", ") || "niciunul"],
-          ].map(([k, v]) => (
-            <div key={k} className="rounded-lg bg-muted p-3"><dt className="text-muted-foreground">{k}</dt><dd className="mt-1 font-semibold">{v}</dd></div>
-          ))}
-        </dl>
-      </Card>
-      <LinkConfig />
-      <p className="sr-only" aria-live="polite" key={ews.remoteStatus.n}>{ews.remoteStatus.text}</p>
-      <h2 className="pt-2 font-display text-xl font-semibold">Sau fișier cu fișier</h2>
-      <div className="grid gap-6 lg:grid-cols-2">
-        {KINDS.map((k) => <DropZone key={k} kind={k} />)}
-      </div>
-      <div className="space-y-12 pt-8">
-        <NotebookSection />
-        <ExtensionSection />
-      </div>
+            <h2 id="cov-h" className="text-base font-semibold">Acoperirea datelor {ews.isDemo && <span className="font-normal text-muted-foreground">(demonstrative)</span>}</h2>
+            <dl className="mt-3 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-5">
+              {[
+                ["Perioadă", `${fmtDate(s[0]?.date ?? "")} – ${fmtDate(ews.lastDate)}`],
+                ["Zile de predicție", num(s.length)],
+                ["Active", ews.assets.filter(Boolean).join(", ") || "BET (implicit)"],
+                ["Goluri în serie", num(missing)],
+                ["Fișiere opționale", [ews.hasDrivers && "factori", ews.hasOutcomes && "rezultate", ews.sensitivity && "sensibilitate"].filter(Boolean).join(", ") || "niciunul"],
+              ].map(([k, v]) => (
+                <div key={k} className="rounded-lg bg-muted p-3"><dt className="text-muted-foreground">{k}</dt><dd className="mt-1 font-semibold">{v}</dd></div>
+              ))}
+            </dl>
+          </Card>
+          <LinkConfig />
+          <p className="sr-only" aria-live="polite" key={ews.remoteStatus.n}>{ews.remoteStatus.text}</p>
+          <h2 className="pt-2 font-display text-xl font-semibold">Sau fișier cu fișier</h2>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {KINDS.map((k) => <DropZone key={k} kind={k} />)}
+          </div>
+          <NotebookSection />
+        </div>
+      </details>
     </div>
   );
 }
