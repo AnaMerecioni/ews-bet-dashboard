@@ -4,6 +4,8 @@ import {
   BellRing, Database, FileText, FlaskConical, Info, LayoutDashboard, Lightbulb, PanelLeftClose, PanelLeftOpen, Settings, Activity,
 } from "lucide-react";
 import { useEws, type RangePreset } from "@/lib/ews/store";
+import { useScrollFx } from "@/lib/ews/scrollFx";
+import { fmtDate } from "@/lib/ews/format";
 import { cn } from "@/lib/utils";
 import { NotificationCenter } from "./NotificationCenter";
 import { AskPalette, ManagementStrip } from "./Ask";
@@ -27,10 +29,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
   const ews = useEws();
+  useScrollFx();
 
   return (
     <div
-      className="app-root min-h-screen bg-background bg-grid"
+      className="app-root min-h-screen bg-background"
       onPointerMove={(e) => {
         const el = (e.target as HTMLElement).closest<HTMLElement>(".sheen");
         if (!el) return;
@@ -51,11 +54,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           )}
           aria-label="Navigare principală"
         >
-          <div className="flex h-16 items-center gap-2 border-b px-4">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand text-primary-foreground dark:text-background">
+          <div className="flex h-20 items-center gap-3 px-5">
+            <span className="glow-primary flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <Activity aria-hidden className="size-5" />
             </span>
-            {!collapsed && <span className="text-sm font-bold text-brand dark:text-primary">Sistem de avertizare timpurie</span>}
+            {!collapsed && (
+              <span className="min-w-0 leading-tight">
+                <span className="block font-display text-base font-bold">EWS BET</span>
+                <span className="block text-xs text-muted-foreground">Sistem de avertizare timpurie</span>
+              </span>
+            )}
           </div>
           <nav className="flex-1 space-y-1 p-3">
             {NAV.map(({ to, label, Icon }) => {
@@ -67,8 +75,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                   title={collapsed ? label : undefined}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
-                    active ? "bg-sidebar-accent text-primary-foreground dark:text-on-risk" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    "flex min-h-11 items-center gap-3 rounded-lg border-l-2 px-3 text-sm transition-colors",
+                    active
+                      ? "border-primary bg-sidebar-accent font-semibold text-sidebar-foreground"
+                      : "border-transparent font-medium text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
                   )}
                 >
                   <Icon aria-hidden className="size-5 shrink-0" />
@@ -89,24 +99,30 @@ export function AppShell({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col pb-20 md:pb-0">
-          <header className="glass-bar sticky top-0 z-30 border-b bg-background/90 backdrop-blur print:hidden">
-            <div className="flex flex-wrap items-center gap-3 px-4 py-3 md:px-6">
-              <p className="mr-auto min-w-0 text-sm font-semibold sm:text-base">
-                <span className="text-brand dark:text-primary">Sistem de avertizare timpurie</span>
-              </p>
+          {/* pe telefon bara de sus e prea înaltă ca să rămână fixată; se fixează de la md în sus */}
+          <header className="app-header glass-bar relative z-30 border-b bg-background/70 backdrop-blur-xl md:sticky md:top-0 print:hidden">
+            <div className="flex flex-wrap items-end gap-x-4 gap-y-3 px-4 py-3 md:px-6">
+              <div className="mr-auto min-w-0 self-center">
+                <p className="font-display text-base font-semibold sm:text-lg">
+                  Sistem de avertizare timpurie<span className="hidden 2xl:inline"> – stres pe indicele BET</span>
+                </p>
+                {ews.lastDate && <p className="text-xs text-muted-foreground">Ultima actualizare a datelor: <span className="tabular-nums">{fmtDate(ews.lastDate)}</span></p>}
+              </div>
               {ews.assets.length > 1 && (
-                <label className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">Activ</span>
+                <label className="flex flex-col gap-1">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Activ</span>
                   <select
                     value={ews.asset}
                     onChange={(e) => ews.setAsset(e.target.value)}
-                    className="min-h-11 rounded-md border bg-card px-2 text-sm"
+                    className="min-h-10 rounded-lg border border-input bg-card px-2 text-sm"
                   >
                     {ews.assets.map((a) => <option key={a} value={a}>{a || "Implicit"}</option>)}
                   </select>
                 </label>
               )}
-              <div role="group" aria-label="Interval de timp" className="flex items-center rounded-lg border bg-card p-0.5">
+              <div className="flex flex-col gap-1">
+              <span aria-hidden className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Perioadă</span>
+              <div role="group" aria-label="Interval de timp" className="flex items-center rounded-lg border border-input bg-card p-0.5">
                 {PRESETS.map((p) => (
                   <button
                     key={p}
@@ -150,9 +166,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </PopoverContent>
                 </Popover>
               </div>
-              <AskPalette />
-              <PresentationButton />
-              <NotificationCenter />
+              </div>
+              <div className="flex items-center gap-2">
+                <AskPalette />
+                <PresentationButton />
+                <NotificationCenter />
+              </div>
             </div>
             <ManagementStrip />
             {ews.isDemo && ews.hydrated && (
@@ -167,6 +186,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 )}
               </div>
             )}
+            <div aria-hidden className="scroll-progress" />
           </header>
           <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-6 md:px-6 focus:outline-none">
             {children}
@@ -174,12 +194,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <nav aria-label="Navigare principală" className="fixed inset-x-0 bottom-0 z-40 glass-bar grid grid-cols-7 border-t bg-sidebar md:hidden print:hidden">
+      <nav aria-label="Navigare principală" className="fixed inset-x-0 bottom-0 z-40 glass-bar grid grid-cols-7 border-t bg-sidebar/90 backdrop-blur-xl md:hidden print:hidden">
         {NAV.map(({ to, short, label, Icon }) => {
           const active = to === "/" ? path === "/" : path.startsWith(to);
           return (
             <Link key={to} to={to} aria-label={label} aria-current={active ? "page" : undefined}
-              className={cn("flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px]", active ? "text-brand dark:text-primary font-semibold" : "text-muted-foreground")}>
+              className={cn("flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px]", active ? "text-primary font-semibold" : "text-muted-foreground")}>
               <Icon aria-hidden className="size-5" />
               {short}
             </Link>

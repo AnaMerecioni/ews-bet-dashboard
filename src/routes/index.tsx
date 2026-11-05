@@ -7,8 +7,9 @@ import { categoryPhrases, summaryPct } from "@/lib/ews/summary";
 import { days, fmtContrib, fmtDate, pct } from "@/lib/ews/format";
 import { parseRecipients } from "@/lib/ews/notify";
 import { sendDigest } from "@/lib/ews/email";
-import { LEVELS } from "@/components/ews/ui";
+import { LEVELS, LevelBadge, RiskGauge } from "@/components/ews/ui";
 import { QuickQuestions } from "@/components/ews/Ask";
+import { Hero } from "@/components/ews/Hero";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -97,7 +98,9 @@ function Summary() {
   const btn = "inline-flex min-h-11 items-center gap-2 rounded-md border bg-card px-4 text-sm font-medium hover:bg-muted disabled:opacity-50";
 
   return (
-    <div className="mx-auto max-w-[800px] space-y-5">
+    <div className="space-y-10">
+    <Hero />
+    <div className="mx-auto max-w-[860px] space-y-5">
       <div aria-live="polite" className="sr-only">{text}</div>
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="flex items-center gap-2">
@@ -111,13 +114,38 @@ function Summary() {
         </div>
       </div>
 
-      <article id="raport" className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-card" aria-labelledby="rez-h">
-        <div className="bg-brand px-8 py-3 text-sm font-semibold tracking-wide text-primary-foreground dark:text-background">
-          Sistem de avertizare timpurie pentru riscuri emergente
+      <article id="raport" data-reveal className="scroll-mt-40 overflow-hidden rounded-3xl border bg-hero text-card-foreground shadow-card" aria-labelledby="rez-h">
+        <div className="px-6 pt-8 sm:px-10">
+          <p className="eyebrow">01 — Riscul acum · Sistem de avertizare timpurie pentru riscuri emergente</p>
         </div>
-        <div className="px-6 py-8 sm:px-10">
-          <h1 id="rez-h" className="text-2xl font-bold tracking-tight">Rezumat evaluare risc</h1>
-          <ul className="mt-6 space-y-4 text-[15px] leading-relaxed marker:text-brand-accent dark:marker:text-primary list-disc pl-5">
+        <div className="px-6 pb-8 pt-4 sm:px-10">
+          <h1 id="rez-h" className="font-display text-3xl font-bold tracking-tight">Rezumat evaluare <span className="text-gradient">risc</span></h1>
+          <div className="mt-6 grid gap-8 border-b pb-8 md:grid-cols-[1.25fr_1fr] print:hidden">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">Probabilitate de stres la</p>
+              <p className="font-display text-lg font-semibold tabular-nums">{fmtDate(day.date)}</p>
+              <p className="text-gradient mt-1 font-display text-[clamp(4rem,11vw,8.5rem)] font-bold leading-none tracking-tight tabular-nums">{summaryPct(day.p)}</p>
+              <p className="mt-4 max-w-md text-muted-foreground">șansa ca BET să scadă cu cel puțin 5% în următoarele 20 de zile de tranzacționare.</p>
+            </div>
+            <div className="flex flex-col justify-center gap-5">
+              <div className="flex flex-wrap items-center gap-3">
+                <LevelBadge level={day.level} />
+                <span className="text-sm text-muted-foreground">{above ? "Peste pragul de alertă" : "Situație sub pragul de alertă"}</span>
+              </div>
+              <RiskGauge p={day.p} alert={thr.alert} high={thr.high} />
+              <dl className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border bg-card/60 p-3">
+                  <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Prag alertă</dt>
+                  <dd className="font-display text-xl font-bold tabular-nums">{thrTxt}</dd>
+                </div>
+                <div className="rounded-xl border bg-card/60 p-3">
+                  <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Alertă EWS</dt>
+                  <dd className={cn("font-display text-xl font-bold", alert && "text-risk-up-text")}>{alert ? "activă" : above ? "neconfirmată" : "inactivă"}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+          <ul className="mt-6 space-y-4 text-[15px] leading-relaxed marker:text-primary list-disc pl-5">
             <li>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <strong>Data evaluării:</strong>
@@ -129,11 +157,12 @@ function Summary() {
                 </label>
               </div>
             </li>
-            <li>
+            {/* pe ecran aceste două rânduri sunt în blocul mare de sus; la printare rămân în listă */}
+            <li className="hidden print:list-item">
               <strong>Probabilitate estimată a unui episod de stres (următoarele 20 de zile):</strong>{" "}
               <span className="text-lg font-bold tabular-nums">{summaryPct(day.p)}</span>
             </li>
-            <li>
+            <li className="hidden print:list-item">
               <strong>Nivel de risc:</strong>{" "}
               <span className={cn("inline-flex items-center gap-1 font-bold", L.text)}>
                 <L.Icon aria-hidden className="size-4" /> {L.label}
@@ -165,10 +194,11 @@ function Summary() {
       </article>
 
       <QuickQuestions />
-      <p className="flex items-start gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
-        <UserRound aria-hidden className="mt-0.5 size-4 shrink-0" />
+      <p data-reveal className="flex items-start gap-2 rounded-xl border bg-card px-4 py-3 text-sm">
+        <UserRound aria-hidden className="mt-0.5 size-4 shrink-0 text-primary" />
         <span><strong>Acțiune recomandată ({pb.owner}):</strong> {pb.action}</span>
       </p>
+    </div>
     </div>
   );
 }

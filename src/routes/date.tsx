@@ -45,6 +45,7 @@ function DataPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        eyebrow="06 — Surse de date"
         title="Date"
         desc="Fișierele se citesc doar în browserul tău și se păstrează local. Nimic nu este trimis pe un server."
         actions={

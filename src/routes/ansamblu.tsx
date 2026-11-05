@@ -78,7 +78,7 @@ function Overview() {
           <div className="mt-4 flex flex-wrap items-end gap-4">
             <LevelBadge level={day.level} size="lg" />
           </div>
-          <p className={cn("liquid-number mt-4 inline-block text-6xl font-extrabold tabular-nums tracking-tight", L.text)}>{pct(day.p, 1)}</p>
+          <p className="text-gradient mt-4 inline-block pb-1 font-display text-7xl font-bold leading-none tabular-nums tracking-tight">{pct(day.p, 1)}</p>
           <p className="mt-3 text-[15px] leading-relaxed">
             <strong>Risc {L.upper}:</strong> probabilitate de {pct(day.p, 1)} ca BET să scadă cu cel puțin 5% în următoarele 20 de zile de tranzacționare.
           </p>

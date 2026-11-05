@@ -48,7 +48,7 @@ function Explain() {
   if (!hasDrivers) {
     return (
       <div>
-        <PageHeader title="Explicabilitate" />
+        <PageHeader eyebrow="04 — De ce?" title="Explicabilitate" />
         <EmptyState icon={Lightbulb} title="Lipsesc factorii SHAP">
           Încarcă fișierul <strong>drivers.csv</strong> pe pagina Date pentru a vedea ce împinge riscul, pe variabile și categorii.
         </EmptyState>
@@ -64,6 +64,7 @@ function Explain() {
   return (
     <div className="space-y-6">
       <PageHeader
+        eyebrow="04 — De ce?"
         title="Explicabilitate"
         desc="Cum ajunge modelul la probabilitatea zilei: de la valoarea de bază, prin contribuția fiecărei variabile."
         actions={

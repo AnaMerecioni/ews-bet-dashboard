@@ -84,6 +84,7 @@ function AlertsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        eyebrow="03 — Alerte"
         title="Alerte și acțiuni"
         desc={`O alertă pornește când probabilitatea stă peste pragul de ${pct(ews.thr.alert, 0)} timp de ${days(settings.confirmDays)} de tranzacționare consecutive.`}
         actions={
