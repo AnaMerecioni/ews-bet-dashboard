@@ -93,7 +93,10 @@ export function ErrorSection() {
               <p className="mt-3 text-[15px] leading-relaxed">
                 șansa ca acest {loc.signal ? <strong>semnal să fie o alarmă falsă</strong> : <strong>„fără semnal” să fie greșit (ratare)</strong>}.
                 Din cele {num(loc.rate.n)} zile istorice cu probabilitate apropiată ({pct(loc.from)} – {pct(loc.to)}),{" "}
-                {num(loc.rate.x)} {loc.signal ? "nu au fost urmate de stres" : "au fost totuși urmate de stres"}.
+                {num(loc.rate.x)}{" "}
+                {loc.rate.x === 1
+                  ? loc.signal ? "nu a fost urmată de stres" : "a fost totuși urmată de stres"
+                  : loc.signal ? "nu au fost urmate de stres" : "au fost totuși urmate de stres"}.
               </p>
               <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">IÎ 95%: {ci(loc.rate)} · schimbă ziua din câmpul de sus</p>
             </>
