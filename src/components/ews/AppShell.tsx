@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
             {!collapsed && (
               <span className="min-w-0 leading-tight">
-                <span className="block font-display text-base font-bold">EWS BET</span>
+                <span className="block font-display text-base font-bold">Gama</span>
                 <span className="block text-xs text-muted-foreground">Sistem de avertizare timpurie</span>
               </span>
             )}

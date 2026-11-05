@@ -42,10 +42,10 @@ export function Hero({ target = "raport" }: { target?: string }) {
           <span aria-hidden className="pulse-dot inline-block size-2 rounded-full bg-risk-high text-risk-high" />
           Live · Early warning system
         </p>
-        <p className="mt-6 font-display text-[clamp(3.25rem,9vw,8rem)] font-bold leading-[0.92] tracking-tight">
-          <span className="reveal block" style={delay(80)}>Vedem</span>
-          <span className="reveal text-gradient block pb-1" style={delay(220)}>furtuna</span>
-          <span className="reveal block" style={delay(360)}>înainte<span className="text-risk-high">.</span></span>
+        <p className="mt-6 font-display text-[clamp(2.75rem,7vw,6.75rem)] font-bold leading-[0.95] tracking-tight">
+          <span className="reveal block" style={delay(80)}>Riscurile,</span>
+          <span className="reveal text-gradient block pb-1" style={delay(220)}>traduse în</span>
+          <span className="reveal block" style={delay(360)}>portofoliul tău<span className="text-risk-high">.</span></span>
         </p>
         <p className="reveal mt-8 max-w-2xl text-lg text-muted-foreground md:text-2xl" style={delay(500)}>
           Probabilitatea zilnică ca indicele BET să cadă cu cel puțin 5% în următoarele 20 de zile de tranzacționare — înainte să se întâmple.
