@@ -7,6 +7,8 @@ import { baseValue, levelOf, whatIf } from "@/lib/ews/compute";
 import { fmtContrib, fmtDate, fmtMonth, num, pct } from "@/lib/ews/format";
 import { Card, CausalityNote, ChartCard, EmptyState, LEVELS, LevelBadge, PageHeader } from "@/components/ews/ui";
 import { Slider } from "@/components/ui/slider";
+import { ErrorSection } from "@/components/ews/ErrorSection";
+import { ExternalContext } from "@/components/ews/ExternalContext";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/explicabilitate")({
@@ -48,10 +50,14 @@ function Explain() {
   if (!hasDrivers) {
     return (
       <div>
-        <PageHeader title="Explicabilitate" />
+        <PageHeader eyebrow="04 — De ce?" title="Explicabilitate" />
         <EmptyState icon={Lightbulb} title="Lipsesc factorii SHAP">
           Încarcă fișierul <strong>drivers.csv</strong> pe pagina Date pentru a vedea ce împinge riscul, pe variabile și categorii.
         </EmptyState>
+        <div className="mt-12 space-y-12">
+          <ErrorSection />
+          <ExternalContext />
+        </div>
       </div>
     );
   }
@@ -64,6 +70,7 @@ function Explain() {
   return (
     <div className="space-y-6">
       <PageHeader
+        eyebrow="04 — De ce?"
         title="Explicabilitate"
         desc="Cum ajunge modelul la probabilitatea zilei: de la valoarea de bază, prin contribuția fiecărei variabile."
         actions={
@@ -96,9 +103,11 @@ function Explain() {
           </div>
         </ChartCard>
       </div>
+      <div className="py-6"><ErrorSection /></div>
       <FeatureOverTime />
       {ews.sensitivity && <SensitivityTool />}
       {day && <ScenarioTool p={day.p} />}
+      <div className="pt-6"><ExternalContext /></div>
     </div>
   );
 }

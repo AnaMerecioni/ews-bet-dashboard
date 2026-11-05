@@ -3,22 +3,23 @@ import { AlertTriangle, CircleHelp, OctagonAlert, ShieldCheck, Table2, BarChart3
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { Level } from "@/lib/ews/types";
-import { fmtContrib } from "@/lib/ews/format";
+import { fmtContrib, pct } from "@/lib/ews/format";
 
-export const LEVELS: Record<Level, { label: string; upper: string; Icon: typeof ShieldCheck; bg: string; text: string; color: string }> = {
-  low: { label: "Scăzut", upper: "SCĂZUT", Icon: ShieldCheck, bg: "bg-risk-low", text: "text-risk-low", color: "var(--risk-low)" },
-  moderate: { label: "Moderat", upper: "MODERAT", Icon: AlertTriangle, bg: "bg-risk-moderate", text: "text-risk-moderate", color: "var(--risk-moderate)" },
-  high: { label: "Ridicat", upper: "RIDICAT", Icon: OctagonAlert, bg: "bg-risk-high", text: "text-risk-high", color: "var(--risk-high)" },
+export const LEVELS: Record<Level, { label: string; upper: string; Icon: typeof ShieldCheck; bg: string; tint: string; text: string; color: string }> = {
+  low: { label: "Scăzut", upper: "SCĂZUT", Icon: ShieldCheck, bg: "bg-risk-low", tint: "bg-risk-low/15 ring-risk-low/35", text: "text-risk-low", color: "var(--risk-low)" },
+  moderate: { label: "Moderat", upper: "MODERAT", Icon: AlertTriangle, bg: "bg-risk-moderate", tint: "bg-risk-moderate/15 ring-risk-moderate/35", text: "text-risk-moderate", color: "var(--risk-moderate)" },
+  high: { label: "Ridicat", upper: "RIDICAT", Icon: OctagonAlert, bg: "bg-risk-high", tint: "bg-risk-high/15 ring-risk-high/35", text: "text-risk-high", color: "var(--risk-high)" },
 };
 
+/** Pastilă de nivel în stilul prototipului: fundal colorat transparent, text și contur în culoarea nivelului. */
 export function LevelBadge({ level, size = "sm" }: { level: Level; size?: "sm" | "lg" }) {
   const L = LEVELS[level];
   return (
     <span
       className={cn(
-        "liquid-pill inline-flex items-center gap-1.5 rounded-full font-semibold text-on-risk",
-        L.bg,
-        size === "lg" ? "px-4 py-2 text-lg" : "px-2.5 py-0.5 text-xs",
+        "inline-flex items-center gap-1.5 rounded-full font-semibold ring-1 ring-inset",
+        L.tint, L.text,
+        size === "lg" ? "px-4 py-2 font-display text-lg" : "px-2.5 py-0.5 text-xs",
       )}
     >
       <L.Icon aria-hidden className={size === "lg" ? "size-6" : "size-3.5"} />
@@ -126,9 +127,10 @@ export function DivergingBars({
               {it.sub && <p className="truncate text-xs text-muted-foreground">{it.sub}</p>}
             </div>
             <div className="relative h-5" aria-hidden>
+              <div className="absolute inset-x-0 inset-y-1.5 rounded-full bg-muted/70" />
               <div className="absolute inset-y-0 left-1/2 w-px bg-border" />
               <div
-                className={cn("absolute inset-y-0.5 rounded-sm", up ? "bg-risk-up" : "bg-risk-down")}
+                className={cn("absolute inset-y-1 rounded-full", up ? "bg-risk-up" : "bg-risk-down")}
                 style={up ? { left: "50%", width: `${w}%` } : { right: "50%", width: `${w}%` }}
               />
             </div>
@@ -154,14 +156,44 @@ export function EmptyState({ icon: Icon, title, children }: { icon: typeof Shiel
   );
 }
 
-export function PageHeader({ title, desc, actions }: { title: string; desc?: string; actions?: ReactNode }) {
+/** Titlu de pagină în stilul prototipului: etichetă mono („03 — Alerte”) și ultimul cuvânt în gradient. */
+export function PageHeader({ title, desc, actions, eyebrow }: { title: string; desc?: string; actions?: ReactNode; eyebrow?: string }) {
+  const cut = title.lastIndexOf(" ");
+  const head = cut > 0 ? title.slice(0, cut + 1) : "";
+  const tail = cut > 0 ? title.slice(cut + 1) : title;
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        {desc && <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{desc}</p>}
+        {eyebrow && <p className="eyebrow mb-3">{eyebrow}</p>}
+        <h1 className="font-display text-4xl font-bold tracking-tight md:text-5xl">
+          {head}<span className="text-gradient">{tail}</span>
+        </h1>
+        {desc && <p className="mt-3 max-w-2xl text-base text-muted-foreground">{desc}</p>}
       </div>
       {actions}
+    </div>
+  );
+}
+
+/** Bară de risc (verde → galben → roșu) cu pragurile marcate și ziua curentă ca punct luminos. */
+export function RiskGauge({ p, alert, high }: { p: number; alert: number; high: number }) {
+  const max = Math.min(1, Math.max(0.3, high * 1.6, p * 1.15));
+  const pos = (v: number, lo = 0, hi = 100) => `${Math.min(hi, Math.max(lo, (v / max) * 100))}%`;
+  const label = "absolute -translate-x-1/2 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground";
+  return (
+    <div aria-hidden>
+      <div className="relative h-4"><span className={label} style={{ left: pos(high, 12, 88) }}>Ridicat {pct(high, 0)}</span></div>
+      <div
+        className="relative mt-1 h-2 rounded-full"
+        style={{ background: "linear-gradient(90deg, color-mix(in oklab, var(--risk-low) 75%, transparent), color-mix(in oklab, var(--risk-moderate) 65%, transparent) 45%, color-mix(in oklab, var(--risk-high) 75%, transparent))" }}
+      >
+        {[alert, high].map((t, i) => <span key={i} className="absolute -inset-y-1 w-px bg-foreground/60" style={{ left: pos(t) }} />)}
+        <span
+          className="absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-foreground shadow-[0_0_14px_var(--primary-glow)]"
+          style={{ left: pos(p) }}
+        />
+      </div>
+      <div className="relative mt-2 h-4"><span className={label} style={{ left: pos(alert, 12, 88) }}>Alertă {pct(alert, 0)}</span></div>
     </div>
   );
 }

@@ -5,7 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "IBM Plex Sans", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --color-primary-glow: var(--primary-glow);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -56,32 +59,34 @@
   --shadow-card: var(--shadow-soft);
 }
 
-/* ============ Paleta de brand KPMG (sursa unică pentru toate culorile de brand) ============ */
+/* ============ Paleta de brand (sursa unică pentru culorile de brand) ============
+   Stilul urmează prototipul „Povestea riscului” (Lovable): navy foarte închis, albastru electric cu
+   strălucire cyan, roșu doar pentru stres. Numele --kpmg-* rămân ca alias-uri pentru compatibilitate. */
 :root {
-  --kpmg-blue: #00338d;      /* KPMG Blue – culoarea principală */
-  --kpmg-cobalt: #1e49e2;    /* Cobalt Blue – accent, linkuri, focus */
-  --kpmg-pacific: #00b8f5;   /* Pacific Blue – accent deschis */
-  --kpmg-purple: #7213ea;    /* Purple – accent secundar */
-  --kpmg-pink: #fd349c;      /* Pink – evidențieri rare */
-  --kpmg-dark: #0c233c;      /* Dark Blue – text și fundal întunecat */
-  --kpmg-medium: #005eb8;    /* Medium Blue */
-  --kpmg-light: #0091da;     /* Light Blue */
-  --kpmg-violet: #483698;    /* Violet */
-  --kpmg-teal: #00a3a1;      /* Green / teal */
+  --kpmg-blue: #1d4fd8;      /* albastru principal (tema luminoasă) */
+  --kpmg-cobalt: #2563eb;    /* accent, linkuri, focus */
+  --kpmg-pacific: #0b9bff;   /* albastru electric (primary în tema întunecată) */
+  --kpmg-purple: #7c4dff;
+  --kpmg-pink: #ff2d46;
+  --kpmg-dark: #0b1226;      /* text în tema luminoasă */
+  --kpmg-medium: #1e5bd6;
+  --kpmg-light: #23dafc;     /* cyan „glow” */
+  --kpmg-violet: #6d5bd0;
+  --kpmg-teal: #00a3a1;
 
-  /* Culori pentru categoriile de risc (grafice), toate din paleta KPMG */
-  --cat-1: var(--kpmg-blue);
-  --cat-2: var(--kpmg-pacific);
-  --cat-3: var(--kpmg-purple);
-  --cat-4: var(--kpmg-teal);
-  --cat-5: var(--kpmg-pink);
-  --cat-6: var(--kpmg-medium);
-  --cat-7: var(--kpmg-violet);
-  --cat-8: var(--kpmg-light);
+  /* Culori pentru categoriile de risc (grafice): 8 nuanțe validate pentru daltonism (ordine fixă) */
+  --cat-1: #2a78d6;
+  --cat-2: #eb6834;
+  --cat-3: #1baf7a;
+  --cat-4: #eda100;
+  --cat-5: #e87ba4;
+  --cat-6: #008300;
+  --cat-7: #6250d6;
+  --cat-8: #e34948;
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 1rem;
   --background: oklch(0.982 0.006 255);
   --foreground: var(--kpmg-dark);
   --card: oklch(1 0 0);
@@ -94,6 +99,7 @@
   --brand-cyan: var(--kpmg-pacific);
   --brand-pink: var(--kpmg-pink);
   --primary: var(--brand);
+  --primary-glow: oklch(0.55 0.16 230);
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.955 0.012 258);
   --secondary-foreground: oklch(0.28 0.08 262);
@@ -120,40 +126,71 @@
   --sidebar-border: oklch(0.905 0.012 258);
   --shadow-soft: 0 1px 2px oklch(0.2 0.05 262 / 0.05), 0 8px 24px -12px oklch(0.2 0.08 262 / 0.14);
   --grid-line: oklch(0.2 0.05 262 / 0.035);
+  --glow: 0 0 0 1px color-mix(in oklab, var(--primary) 35%, transparent), 0 0 34px -8px color-mix(in oklab, var(--primary) 55%, transparent);
+  --gradient-hero:
+    radial-gradient(120% 140% at 0% 0%, oklch(0.75 0.12 255 / 0.45), transparent 55%),
+    radial-gradient(90% 120% at 100% 100%, oklch(0.8 0.1 22 / 0.35), transparent 55%),
+    oklch(0.97 0.012 255);
+  --gradient-text: linear-gradient(100deg, var(--foreground) 10%, var(--primary-glow) 55%, var(--primary) 90%);
+  --page-glow:
+    radial-gradient(60% 50% at 85% -10%, oklch(0.75 0.12 255 / 0.25), transparent 70%),
+    radial-gradient(40% 40% at 10% 110%, oklch(0.8 0.1 22 / 0.15), transparent 70%);
 }
 
+/* Tema întunecată = aspectul principal (prototipul Lovable). Valorile sunt cele din prototip. */
 .dark {
-  --cat-1: var(--kpmg-pacific);
-  --cat-6: var(--kpmg-light);
-  --cat-7: #8f7fe0;
-  --background: oklch(0.17 0.025 262);
-  --foreground: oklch(0.95 0.008 258);
-  --card: oklch(0.215 0.03 262);
-  --card-foreground: oklch(0.95 0.008 258);
-  --popover: oklch(0.235 0.03 262);
-  --popover-foreground: oklch(0.95 0.008 258);
-  --primary: var(--kpmg-pacific);
-  --primary-foreground: var(--kpmg-dark);
-  --brand-accent: var(--kpmg-pacific);
-  --secondary: oklch(0.27 0.03 262);
-  --secondary-foreground: oklch(0.93 0.01 258);
-  --muted: oklch(0.26 0.025 262);
-  --muted-foreground: oklch(0.74 0.025 258);
-  --accent: oklch(0.29 0.05 262);
-  --accent-foreground: oklch(0.93 0.02 258);
-  --border: oklch(0.32 0.03 262);
-  --input: oklch(0.4 0.03 262);
-  --ring: var(--kpmg-pacific);
-  --risk-up: oklch(0.66 0.17 28);
-  --risk-down: oklch(0.68 0.14 258);
-  --risk-up-text: oklch(0.76 0.13 28);
-  --risk-down-text: oklch(0.78 0.11 258);
-  --sidebar: oklch(0.2 0.028 262);
-  --sidebar-foreground: oklch(0.95 0.008 258);
-  --sidebar-accent: var(--brand);
-  --sidebar-border: oklch(0.3 0.03 262);
-  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px -12px oklch(0 0 0 / 0.5);
-  --grid-line: oklch(1 0 0 / 0.03);
+  color-scheme: dark;
+  --cat-1: #3987e5;
+  --cat-2: #d95926;
+  --cat-3: #199e70;
+  --cat-4: #c98500;
+  --cat-5: #d55181;
+  --cat-6: #008300;
+  --cat-7: #9085e9;
+  --cat-8: #e66767;
+  --background: oklch(0.14 0.04 265);
+  --foreground: oklch(0.97 0.01 250);
+  --card: oklch(0.19 0.045 265);
+  --card-foreground: oklch(0.97 0.01 250);
+  --popover: oklch(0.2 0.05 265);
+  --popover-foreground: oklch(0.97 0.01 250);
+  --brand: oklch(0.68 0.19 250);
+  --brand-accent: oklch(0.68 0.19 250);
+  --brand-cyan: oklch(0.82 0.14 215);
+  --primary: oklch(0.68 0.19 250);
+  --primary-glow: oklch(0.82 0.14 215);
+  --primary-foreground: oklch(0.14 0.04 265);
+  --secondary: oklch(0.25 0.05 265);
+  --secondary-foreground: oklch(0.97 0.01 250);
+  --muted: oklch(0.24 0.04 265);
+  --muted-foreground: oklch(0.72 0.04 255);
+  --accent: oklch(0.27 0.06 262);
+  --accent-foreground: oklch(0.97 0.01 250);
+  --destructive: oklch(0.65 0.24 22);
+  --border: oklch(1 0 0 / 0.09);
+  --input: oklch(1 0 0 / 0.16);
+  --ring: oklch(0.68 0.19 250);
+  --risk-low: oklch(0.75 0.17 160);
+  --risk-moderate: oklch(0.8 0.16 75);
+  --risk-high: oklch(0.66 0.23 22);
+  --risk-up: oklch(0.66 0.23 22);
+  --risk-down: oklch(0.68 0.19 250);
+  --risk-up-text: oklch(0.74 0.17 22);
+  --risk-down-text: oklch(0.78 0.13 245);
+  --on-risk: oklch(0.14 0.04 265);
+  --sidebar: oklch(0.11 0.035 265);
+  --sidebar-foreground: oklch(0.92 0.02 250);
+  --sidebar-accent: oklch(0.22 0.06 262);
+  --sidebar-border: oklch(1 0 0 / 0.07);
+  --shadow-soft: 0 1px 0 oklch(1 0 0 / 0.06) inset, 0 20px 50px -20px oklch(0 0 0 / 0.6);
+  --grid-line: oklch(1 0 0 / 0.025);
+  --gradient-hero:
+    radial-gradient(120% 140% at 0% 0%, oklch(0.42 0.2 258 / 0.55), transparent 55%),
+    radial-gradient(90% 120% at 100% 100%, oklch(0.55 0.22 22 / 0.35), transparent 55%),
+    oklch(0.17 0.05 265);
+  --page-glow:
+    radial-gradient(60% 50% at 85% -10%, oklch(0.45 0.2 255 / 0.35), transparent 70%),
+    radial-gradient(40% 40% at 10% 110%, oklch(0.5 0.2 22 / 0.18), transparent 70%);
 }
 
 /* Okabe-Ito based colorblind-safe palette */
@@ -167,6 +204,11 @@
   --risk-down-text: oklch(0.45 0.12 245);
 }
 .dark.cb {
+  --risk-low: oklch(0.7 0.12 245);
+  --risk-moderate: oklch(0.78 0.13 72);
+  --risk-high: oklch(0.68 0.16 42);
+  --risk-up: oklch(0.68 0.16 42);
+  --risk-down: oklch(0.7 0.12 245);
   --risk-up-text: oklch(0.76 0.13 50);
   --risk-down-text: oklch(0.78 0.1 240);
 }
@@ -217,6 +259,32 @@
   background-size: 32px 32px;
 }
 
+@utility font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+/* Text cu gradient alb → cyan → albastru (titluri și cifre mari) */
+@utility text-gradient {
+  background-image: var(--gradient-text);
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+@utility glow-primary {
+  box-shadow: var(--glow);
+}
+@utility bg-hero {
+  background: var(--gradient-hero);
+}
+/* Etichetă de secțiune: „01 — RISCUL ACUM” */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--primary-glow);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
@@ -225,7 +293,11 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-feature-settings: "tnum" 1, "cv11" 1;
+    font-feature-settings: "tnum" 1;
+  }
+  h1, h2 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
   }
   :focus-visible {
     outline: 3px solid var(--ring) !important;
@@ -251,13 +323,8 @@
     linear-gradient(160deg, oklch(0.97 0.015 255), oklch(0.93 0.03 262));
   animation: mesh-drift 45s ease-in-out infinite alternate;
 }
-.glass.dark .mesh {
-  background:
-    radial-gradient(40% 35% at 20% 25%, color-mix(in oklab, var(--brand-accent) 35%, transparent), transparent 70%),
-    radial-gradient(35% 30% at 80% 20%, color-mix(in oklab, var(--brand-violet) 22%, transparent), transparent 70%),
-    radial-gradient(45% 40% at 70% 80%, color-mix(in oklab, var(--brand) 40%, transparent), transparent 70%),
-    linear-gradient(160deg, oklch(0.15 0.04 262), oklch(0.12 0.05 265));
-}
+/* În tema întunecată fundalul (strălucire + grilă) vine din .app-root, ca în prototip */
+.glass.dark .mesh { display: none; }
 @keyframes mesh-drift {
   0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
   50% { transform: translate3d(4%, -3%, 0) rotate(6deg) scale(1.05); }
@@ -277,14 +344,15 @@
   --shadow-soft: 0 1px 1px oklch(0.2 0.08 262 / 0.04), 0 10px 30px -12px oklch(0.2 0.1 262 / 0.22), inset 0 1px 0 oklch(1 0 0 / 0.6);
 }
 .glass.dark {
-  --card: oklch(0.22 0.035 262 / 0.72);
-  --popover: oklch(0.23 0.035 262 / 0.92);
-  --sidebar: oklch(0.2 0.035 262 / 0.7);
-  --glass-chart: oklch(0.21 0.035 262 / 0.86);
-  --glass-edge: oklch(1 0 0 / 0.22);
-  --shadow-soft: 0 1px 1px oklch(0 0 0 / 0.3), 0 14px 34px -14px oklch(0 0 0 / 0.65), inset 0 1px 0 oklch(1 0 0 / 0.1);
+  --card: oklch(0.19 0.045 265 / 0.72);
+  --popover: oklch(0.2 0.05 265 / 0.94);
+  --sidebar: oklch(0.11 0.035 265 / 0.8);
+  --glass-chart: oklch(0.19 0.045 265 / 0.82);
+  --glass-edge: oklch(1 0 0 / 0.14);
+  --radius: 1rem;
+  --shadow-soft: 0 1px 0 oklch(1 0 0 / 0.06) inset, 0 20px 50px -20px oklch(0 0 0 / 0.6);
 }
-.glass .app-root { background-color: transparent; background-image: none; }
+.glass .app-root { background-color: transparent; }
 .glass .card-surface {
   border-color: transparent;
   background:
@@ -348,9 +416,93 @@
 .glass button:not(:disabled):active { transform: scale(0.96); }
 .glass button.rounded-md, .glass button.rounded-lg { border-radius: 9999px; }
 
+/* ============ Aspectul „Povestea riscului” ============ */
+.app-root {
+  background-image:
+    var(--page-glow),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: auto, auto, 48px 48px, 48px 48px;
+  background-attachment: fixed;
+}
+.dark { scrollbar-color: oklch(1 0 0 / 0.16) transparent; }
+::selection { background: color-mix(in oklab, var(--primary) 40%, transparent); }
+.dark button.bg-primary:not(:disabled):hover,
+.dark a.bg-primary:hover { box-shadow: var(--glow); }
+
+/* Bara de sus: la derulare devine mai opacă, cu umbră; linia de progres arată cât ai derulat */
+.app-header { transition: background-color 300ms ease, box-shadow 300ms ease; }
+:root[data-scrolled] .app-header {
+  background-color: color-mix(in oklab, var(--background) 88%, transparent);
+  box-shadow: 0 18px 40px -24px oklch(0 0 0 / 0.7);
+}
+.scroll-progress {
+  position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  transform-origin: 0 50%; transform: scaleX(0); pointer-events: none;
+  background: linear-gradient(90deg, var(--primary), var(--primary-glow));
+  box-shadow: 0 0 12px color-mix(in oklab, var(--primary-glow) 70%, transparent);
+}
+
+/* Fundal animat „aurora” și linia de scanare din hero */
+.aurora {
+  position: absolute; border-radius: 9999px; filter: blur(90px); opacity: 0.55; pointer-events: none;
+  animation: aurora-move 14s ease-in-out infinite;
+}
+.aurora-a { background: oklch(0.55 0.22 255); width: 55vw; height: 55vw; top: -20vw; left: -10vw; }
+.aurora-b { background: oklch(0.6 0.24 22 / 0.7); width: 40vw; height: 40vw; top: 10vh; right: -8vw; animation-delay: -5s; }
+.aurora-c { background: oklch(0.75 0.15 210 / 0.6); width: 35vw; height: 35vw; bottom: -15vw; left: 30vw; animation-delay: -9s; }
+:root:not(.dark) .aurora { opacity: 0.28; }
+@keyframes aurora-move {
+  0%, 100% { transform: translate(0) scale(1); }
+  50% { transform: translate(8%, -6%) scale(1.15); }
+}
+.scanline {
+  position: absolute; inset-inline: 0; top: 0; height: 30vh; pointer-events: none;
+  background: linear-gradient(transparent, oklch(0.82 0.14 215 / 0.08), transparent);
+  animation: scan 7s linear infinite;
+}
+@keyframes scan { from { transform: translateY(-100%); } to { transform: translateY(100vh); } }
+
+/* Banda cu factori care defilează */
+.marquee { animation: marquee-x 40s linear infinite; }
+@keyframes marquee-x { to { transform: translateX(-50%); } }
+.marquee-mask { mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+
+.pulse-dot { animation: pulse-ring 1.6s ease-out infinite; }
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 currentColor; }
+  100% { box-shadow: 0 0 0 10px transparent; }
+}
+
+/* Intrare la încărcare (hero): estompare + ridicare, cu întârzieri în cascadă */
+.reveal { animation: reveal-up 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes reveal-up {
+  from { opacity: 0; filter: blur(8px); transform: translateY(40px); }
+  to { opacity: 1; filter: none; transform: none; }
+}
+
+/* Apariție la derulare: scrollFx.ts pune data-rv="0" pe carduri și „1” când intră în ecran */
+@media (prefers-reduced-motion: no-preference) {
+  :root:not(.reduce-motion) [data-rv] {
+    transition:
+      opacity 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) var(--rv-delay, 0ms),
+      transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) var(--rv-delay, 0ms),
+      filter 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) var(--rv-delay, 0ms);
+  }
+  :root:not(.reduce-motion) [data-rv="0"] { opacity: 0; filter: blur(8px); transform: translate3d(0, 40px, 0); }
+}
+
+.reduce-motion :is(.aurora, .scanline, .marquee, .pulse-dot, .reveal) { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.aurora, .scanline, .marquee, .pulse-dot, .reveal) { animation: none !important; }
+}
+
 .print-only { display: none; }
 @media print {
   .mesh { display: none !important; }
+  [data-rv] { opacity: 1 !important; filter: none !important; transform: none !important; }
+  .text-gradient { color: inherit !important; background: none !important; }
+  .eyebrow { color: #33405c !important; }
   html, body, .app-root { background: white !important; }
   .card-surface { backdrop-filter: none !important; background: white !important; }
   body * { visibility: hidden; }

@@ -121,6 +121,77 @@ export function metrics(series: Day[], alert: number) {
   return { n, tp, fp, fn, tn, base, brier, bss: brierRef ? 1 - brier / brierRef : 0, precision, recall, f2, auc: auc(rows) };
 }
 
+/** O proporție x/n cu interval de încredere Wilson 95% (stabil și pentru eșantioane mici sau proporții extreme). */
+export interface Rate { x: number; n: number; p: number | null; lo: number | null; hi: number | null }
+export function wilson(x: number, n: number, z = 1.96): Rate {
+  if (!n) return { x, n, p: null, lo: null, hi: null };
+  const p = x / n;
+  const d = 1 + (z * z) / n;
+  const c = (p + (z * z) / (2 * n)) / d;
+  const h = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / d;
+  return { x, n, p, lo: Math.max(0, c - h), hi: Math.min(1, c + h) };
+}
+
+/**
+ * Erorile modelului la nivel de zi (semnal = probabilitate ≥ prag), doar pe zilele cu rezultat cunoscut.
+ *  - eroare de tip I (α): alarmă falsă = semnal deși nu urmează stres → FP / (FP + TN)
+ *  - eroare de tip II (β): ratare = fără semnal deși urmează stres → FN / (FN + TP)
+ *  - P(alertă falsă | semnal) = FP / (TP + FP)  (rata falselor descoperiri)
+ *  - P(ratare | fără semnal) = FN / (FN + TN)   (rata falselor omisiuni)
+ *  - P(eroare) = (FP + FN) / n
+ */
+export function errorStats(series: Day[], alert: number) {
+  const m = metrics(series, alert);
+  return {
+    ...m,
+    error: wilson(m.fp + m.fn, m.n),
+    typeI: wilson(m.fp, m.fp + m.tn),
+    typeII: wilson(m.fn, m.fn + m.tp),
+    falseAlarm: wilson(m.fp, m.tp + m.fp),
+    falseCalm: wilson(m.fn, m.fn + m.tn),
+  };
+}
+
+/** Aceleași erori la nivel de alertă/episod: alerte infirmate din cele evaluate și episoade neanticipate. */
+export function alertErrorStats(alerts: Alert[], episodes: Episode[]) {
+  const evaluated = alerts.filter((a) => a.confirmed !== null);
+  return {
+    falseAlert: wilson(evaluated.filter((a) => a.confirmed === false).length, evaluated.length),
+    missedEpisode: wilson(episodes.filter((e) => !e.warned).length, episodes.length),
+  };
+}
+
+/** α și β pentru fiecare prag posibil: cum se schimbă cele două erori când muți pragul. */
+export function thresholdCurve(series: Day[], steps = 50) {
+  const rows = series.filter((d) => d.y !== null);
+  const pos = rows.filter((d) => d.y === 1);
+  const neg = rows.length - pos.length;
+  const maxP = Math.max(0.05, ...rows.map((d) => d.p));
+  const out: { thr: number; typeI: number; typeII: number }[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = (maxP * i) / steps;
+    const fp = rows.filter((d) => d.y === 0 && d.p >= t).length;
+    const fn = pos.filter((d) => d.p < t).length;
+    out.push({ thr: t, typeI: neg ? fp / neg : 0, typeII: pos.length ? fn / pos.length : 0 });
+  }
+  return out;
+}
+
+/**
+ * Probabilitatea ca semnalul unei zile să fie greșit, estimată din zilele istorice cu probabilitate apropiată
+ * (cei mai apropiați k vecini după p). Peste prag: cât de des a fost alarmă falsă; sub prag: cât de des a urmat totuși stres.
+ */
+export function localError(series: Day[], p0: number, alert: number, k?: number) {
+  const rows = series.filter((d) => d.y !== null);
+  if (!rows.length) return null;
+  const kk = Math.min(rows.length, k ?? Math.max(50, Math.round(rows.length * 0.05)));
+  const near = [...rows].sort((a, b) => Math.abs(a.p - p0) - Math.abs(b.p - p0)).slice(0, kk);
+  const signal = p0 >= alert;
+  const wrong = near.filter((d) => (signal ? d.y === 0 : d.y === 1)).length;
+  const ps = near.map((d) => d.p);
+  return { signal, rate: wilson(wrong, near.length), from: Math.min(...ps), to: Math.max(...ps) };
+}
+
 export function auc(rows: { p: number; y: number }[]) {
   const sorted = [...rows].sort((a, b) => a.p - b.p);
   const ranks = new Array(sorted.length);

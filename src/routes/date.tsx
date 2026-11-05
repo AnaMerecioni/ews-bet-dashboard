@@ -8,6 +8,7 @@ import { FILE_LABELS, parseCsv, REQUIRED, TEMPLATES, type ParseResult } from "@/
 import type { FileKind } from "@/lib/ews/types";
 import { fmtDate, num } from "@/lib/ews/format";
 import { Card, PageHeader } from "@/components/ews/ui";
+import { ExtensionSection, KaggleBundle, NotebookSection } from "@/components/ews/DataHub";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -45,6 +46,7 @@ function DataPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        eyebrow="06 — Surse de date"
         title="Date"
         desc="Fișierele se citesc doar în browserul tău și se păstrează local. Nimic nu este trimis pe un server."
         actions={
@@ -65,6 +67,7 @@ function DataPage() {
           </AlertDialog>
         }
       />
+      <KaggleBundle />
       <Card aria-labelledby="cov-h">
         <h2 id="cov-h" className="text-base font-semibold">Acoperirea datelor {ews.isDemo && <span className="font-normal text-muted-foreground">(demonstrative)</span>}</h2>
         <dl className="mt-3 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-5">
@@ -81,8 +84,13 @@ function DataPage() {
       </Card>
       <LinkConfig />
       <p className="sr-only" aria-live="polite" key={ews.remoteStatus.n}>{ews.remoteStatus.text}</p>
+      <h2 className="pt-2 font-display text-xl font-semibold">Sau fișier cu fișier</h2>
       <div className="grid gap-6 lg:grid-cols-2">
         {KINDS.map((k) => <DropZone key={k} kind={k} />)}
+      </div>
+      <div className="space-y-12 pt-8">
+        <NotebookSection />
+        <ExtensionSection />
       </div>
     </div>
   );

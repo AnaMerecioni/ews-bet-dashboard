@@ -97,7 +97,7 @@ export function QuickQuestions({ ids }: { ids?: string[] }) {
   const q = QUESTIONS.find((x) => x.id === sel);
   const ans = useMemo(() => (q && qa.series.length ? q.answer(qa) : null), [q, qa]);
   return (
-    <section aria-labelledby="qq-h" className="space-y-3 print:hidden">
+    <section aria-labelledby="qq-h" data-reveal className="space-y-3 print:hidden">
       <h2 id="qq-h" className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
         <MessageCircleQuestion aria-hidden className="size-4" /> Întrebări rapide
       </h2>

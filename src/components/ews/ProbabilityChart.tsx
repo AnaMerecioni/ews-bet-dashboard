@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import {
-  CartesianGrid, ComposedChart, Line, LineChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Area, CartesianGrid, ComposedChart, Line, LineChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import type { Alert, Day, DriverRow } from "@/lib/ews/types";
 import { fmtContrib, fmtDate, fmtMonth, num, pct } from "@/lib/ews/format";
@@ -37,6 +37,7 @@ function labelRuns(data: Day[]) {
 export function ProbabilityChart({
   data, alert, high, alerts, selected, onSelect, driversFor, unit = "pp", height = 320, showBet = true, showEpisodes = true,
 }: Props) {
+  const fillId = `pfill-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const yMax = useMemo(() => {
     const mp = Math.max(...data.map((d) => d.p), 0);
     return Math.min(1, Math.ceil(Math.max(high * 1.3, mp * 1.1) * 20) / 20);
@@ -81,6 +82,10 @@ export function ProbabilityChart({
               <pattern id="hatch" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
                 <line x1="0" y1="0" x2="0" y2="7" stroke="var(--foreground)" strokeWidth="1.5" strokeOpacity="0.28" />
               </pattern>
+              <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" style={{ stopColor: "var(--primary)", stopOpacity: 0.35 }} />
+                <stop offset="100%" style={{ stopColor: "var(--primary)", stopOpacity: 0 }} />
+              </linearGradient>
             </defs>
             <ReferenceArea y1={0} y2={alert} fill="var(--risk-low)" fillOpacity={0.07} ifOverflow="hidden"
               label={{ value: "Scăzut", position: "insideBottomRight", fill: "var(--risk-low)", fontSize: 11, fontWeight: 600 }} />
@@ -134,7 +139,10 @@ export function ProbabilityChart({
                 );
               }}
             />
-            <Line type="monotone" dataKey="p" stroke="var(--brand)" strokeWidth={2} dot={false} isAnimationActive={false} activeDot={{ r: 5 }} />
+            <Area
+              type="monotone" dataKey="p" stroke="var(--primary)" strokeWidth={2} fill={`url(#${fillId})`} dot={false} isAnimationActive={false}
+              activeDot={{ r: 5, fill: "var(--primary)", stroke: "var(--background)", strokeWidth: 2 }}
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

@@ -54,7 +54,7 @@ function SettingsPage() {
   );
   return (
     <div className="space-y-6">
-      <PageHeader title="Setări" desc="Se salvează automat în acest browser." />
+      <PageHeader eyebrow="07 — Configurare" title="Setări" desc="Se salvează automat în acest browser." />
       <div className="grid gap-6 xl:grid-cols-2">
         <Card aria-labelledby="thr-h">
           <h2 id="thr-h" className="text-base font-semibold">Praguri și alerte</h2>

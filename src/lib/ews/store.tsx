@@ -22,6 +22,8 @@ export interface Settings {
   playbook: Record<Level, Playbook>;
   tourDone: boolean;
   notif: NotifSettings;
+  /** 2 = aspectul „Povestea riscului” (temă întunecată implicită) */
+  designVersion?: number;
 }
 export interface NotifSettings {
   inApp: boolean;
@@ -53,7 +55,7 @@ export const DEFAULT_SETTINGS: Settings = {
   highThreshold: null,
   confirmDays: 2,
   shapUnit: "pp",
-  theme: "light",
+  theme: "dark",
   textSize: 100,
   highContrast: false,
   reduceMotion: false,
@@ -62,6 +64,7 @@ export const DEFAULT_SETTINGS: Settings = {
   playbook: DEFAULT_PLAYBOOK,
   tourDone: false,
   notif: DEFAULT_NOTIF,
+  designVersion: 2,
 };
 
 export type RangePreset = "3L" | "6L" | "1A" | "Tot" | "custom";
@@ -153,6 +156,8 @@ export function EwsProvider({ children }: { children: ReactNode }) {
       const s = localStorage.getItem(K_SET);
       if (s) {
         const parsed = JSON.parse(s);
+        // o singură dată: setările salvate înainte de noul aspect trec pe tema întunecată (se poate schimba din Setări)
+        if ((parsed.designVersion ?? 1) < 2) { parsed.theme = "dark"; parsed.designVersion = 2; }
         setSettings({ ...DEFAULT_SETTINGS, ...parsed, notif: { ...DEFAULT_NOTIF, ...parsed.notif, types: { ...DEFAULT_NOTIF.types, ...parsed.notif?.types } } });
       }
       const n = localStorage.getItem(K_NOTIF);

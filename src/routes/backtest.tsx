@@ -29,7 +29,7 @@ function Backtest() {
   if (!ews.hasOutcomes) {
     return (
       <div>
-        <PageHeader title="Backtest" />
+        <PageHeader eyebrow="05 — Încredere" title="Backtest" />
         <EmptyState icon={FlaskConical} title="Încarcă rezultatele reale">
           Pentru backtest avem nevoie de <strong>outcomes.csv</strong> cu coloanele <code>Date, stress_event_20d</code> (și opțional <code>BET</code>).{" "}
           <Link to="/date" className="font-semibold text-brand-accent underline dark:text-primary">Mergi la Date</Link>
@@ -50,7 +50,7 @@ function Backtest() {
   ];
   return (
     <div className="space-y-6">
-      <PageHeader title="Backtest" desc={`${num(m.n)} zile cu rezultat cunoscut · rata de bază a stresului: ${pct(m.base)} · prag de alertă ${pct(ews.thr.alert, 0)}.`} />
+      <PageHeader eyebrow="05 — Încredere" title="Backtest" desc={`${num(m.n)} zile cu rezultat cunoscut · rata de bază a stresului: ${pct(m.base)} · prag de alertă ${pct(ews.thr.alert, 0)}.`} />
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {cards.map((c) => (
           <li key={c.k} className="card-surface p-4">
