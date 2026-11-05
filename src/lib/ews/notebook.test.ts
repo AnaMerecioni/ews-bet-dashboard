@@ -40,3 +40,14 @@ describe("analyzeNotebook", () => {
     expect(() => analyzeNotebook("nu e json", "x.ipynb")).toThrow();
   });
 });
+
+describe("analyzeNotebook — notebook-ul din Kaggle", () => {
+  const k = analyzeNotebook(JSON.stringify({
+    cells: [
+      { cell_type: "markdown", source: '# <span style="color:#00338D">DataSprint 2026 — Starter Notebook</span>' },
+      { cell_type: "code", execution_count: 1, source: "sub.to_csv('submission.csv', index=False)", outputs: [] },
+    ],
+  }), "varianta-ana.ipynb");
+  it("scoate HTML-ul din titlu", () => expect(k.title).toBe("DataSprint 2026 — Starter Notebook"));
+  it("submission.csv contează drept predicții", () => expect(k.exports.predictions).toBe(true));
+});

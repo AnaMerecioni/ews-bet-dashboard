@@ -75,7 +75,7 @@ function Check({ ok, children }: { ok: boolean; children: ReactNode }) {
   return (
     <li className="flex items-start gap-2 text-sm">
       {ok ? <CheckCircle2 aria-hidden className="mt-0.5 size-4 shrink-0 text-risk-low" /> : <AlertTriangle aria-hidden className="mt-0.5 size-4 shrink-0 text-risk-moderate" />}
-      <span><span className="sr-only">{ok ? "În regulă: " : "Atenție: "}</span>{children}</span>
+      <span className="min-w-0 [overflow-wrap:anywhere]"><span className="sr-only">{ok ? "În regulă: " : "Atenție: "}</span>{children}</span>
     </li>
   );
 }
@@ -169,13 +169,13 @@ export function NotebookSection() {
         Încarcă fișierul <code>.ipynb</code> (din Kaggle: <strong>File → Download notebook</strong>, după „Save &amp; Run All”). Se citește doar în browser;
         păstrăm rezumatul: parametrii, metricile, erorile și dacă exportă tot ce are nevoie dashboard-ul.
       </SectionHead>
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 [&>*]:min-w-0">
         <Card className="lg:col-span-1">
           <Drop accept=".ipynb,application/x-ipynb+json,application/json" icon={NotebookPen} label={nb ? "Înlocuiește notebook-ul" : "Încarcă notebook-ul (.ipynb)"}
             hint="un singur fișier" onFiles={(f) => void handle(f)} />
           {nb && (
             <div className="mt-4 space-y-1 text-sm">
-              <p className="font-semibold">{nb.title ?? nb.name}</p>
+              <p className="break-words font-semibold">{(nb.title ?? nb.name).replace(/<[^>]+>/g, "")}</p>
               <p className="text-muted-foreground">{nb.name} · {nb.language ?? "python"} · {num(nb.cells.code)} celule de cod, {num(nb.cells.markdown)} de text</p>
               <p className="text-muted-foreground">Încărcat {fmtDate(nb.loadedAt.slice(0, 10))}</p>
               <button onClick={() => notebookStore.set(null)} className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-md px-2 text-sm text-destructive hover:bg-muted">
@@ -208,7 +208,7 @@ export function NotebookSection() {
                 </Check>
               )}
             </ul>
-            <div className="mt-6 grid gap-6 md:grid-cols-2">
+            <div className="mt-6 grid gap-6 md:grid-cols-2 [&>*]:min-w-0">
               {nb.params.length > 0 && (
                 <div>
                   <h4 className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Parametri</h4>
@@ -573,7 +573,7 @@ export function ExtensionSection() {
         (Eurostat), ciclul global (OECD), crypto, atacuri cibernetice și atenția publică (Wikipedia). Primește și CSV-urile scraper-ului.
         Rezultatul apare în Explicabilitate → „Context extern” și se descarcă pentru Kaggle.
       </SectionHead>
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 [&>*]:min-w-0">
         <ExtensionRunner />
         <Card className="space-y-3">
           <h3 className="font-display text-lg font-semibold">Ai rulat scraper-ul local?</h3>

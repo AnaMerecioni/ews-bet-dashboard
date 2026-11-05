@@ -509,3 +509,9 @@
   #raport, #raport * { visibility: visible; }
   #raport { display: block !important; position: absolute; inset: 0; padding: 24px; background: white; color: black; }
 }
+
+/* Conținutul absolut (ex. textul .sr-only din tabele) rămâne în containerul care derulează orizontal,
+   altfel lățește pagina pe telefon. */
+.overflow-x-auto {
+  position: relative;
+}

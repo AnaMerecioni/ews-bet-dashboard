@@ -95,17 +95,35 @@ export function useScrollFx() {
       });
     };
 
+    // rezervă: dacă observatorul nu răspunde (fereastră fără cadre randate, webview-uri), arătăm
+    // cardurile aflate în ecran după ce derularea se oprește, ca nimic să nu rămână ascuns.
+    const fallback = () => {
+      main.querySelectorAll<HTMLElement>('[data-rv="0"]').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.top >= window.innerHeight || r.bottom <= 0) return;
+        io.unobserve(el);
+        el.setAttribute("data-rv", "1");
+        window.setTimeout(() => finish(el), 1400);
+      });
+    };
+    let fb = 0;
+    const scheduleFallback = () => { clearTimeout(fb); fb = window.setTimeout(fallback, 600); };
+
     let timer = 0;
     const mo = new MutationObserver((records) => {
       // graficele (SVG) se modifică des la hover; le ignorăm
       if (records.every((r) => (r.target as Element).closest?.(".recharts-wrapper"))) return;
-      if (!timer) timer = window.setTimeout(() => { timer = 0; scan(); }, 30);
+      if (!timer) timer = window.setTimeout(() => { timer = 0; scan(); scheduleFallback(); }, 30);
     });
     scan();
+    scheduleFallback();
     mo.observe(main, { childList: true, subtree: true });
     main.addEventListener("transitionend", done);
+    window.addEventListener("scroll", scheduleFallback, { passive: true });
     return () => {
       clearTimeout(timer);
+      clearTimeout(fb);
+      window.removeEventListener("scroll", scheduleFallback);
       io.disconnect();
       mo.disconnect();
       main.removeEventListener("transitionend", done);

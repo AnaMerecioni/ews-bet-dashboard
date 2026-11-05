@@ -49,7 +49,7 @@ export function analyzeNotebook(text: string, name: string): NotebookSummary {
     for (const line of join(c.source).split("\n")) {
       const m = line.match(/^(#{1,2})\s+(.+)/);
       if (!m) continue;
-      const h = m[2].replace(/[*_`]/g, "").trim();
+      const h = m[2].replace(/<[^>]+>/g, "").replace(/[*_`]/g, "").trim();
       if (!title && m[1] === "#") title = h;
       if (outline.length < 40) outline.push(h);
     }
@@ -104,7 +104,8 @@ export function analyzeNotebook(text: string, name: string): NotebookSummary {
     metrics,
     inputs: [...inputs].slice(0, 25),
     exports: {
-      predictions: has("predictions.csv"),
+      // submission.csv are exact formatul predictions.csv (Date, stress_probability_20d, stress_threshold)
+      predictions: has("predictions.csv") || has("submission.csv"),
       drivers: has("drivers.csv"),
       outcomes: has("outcomes.csv"),
       sensitivity: has("sensitivity.csv"),
