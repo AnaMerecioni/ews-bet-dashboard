@@ -225,6 +225,58 @@ export function featureTableToExt(t: FeatureTable): ExtRow[] {
   });
 }
 
+// ---------------------------------------------------------------- un singur CSV: DataSprint + extensia
+const TARGET = "stress_event_20d";
+
+/** Un fișier DataSprint citit în browser (train.csv are ținta, test.csv nu). */
+export interface DsFile { name: string; kind: "train" | "test"; header: string[]; rows: string[][]; dateIdx: number; from: string; to: string }
+
+export function parseDataSprint(text: string, name: string): DsFile {
+  const res = Papa.parse<string[]>(text.replace(/^﻿/, ""), { skipEmptyLines: true });
+  const [rawHead, ...rows] = res.data;
+  const header = (rawHead ?? []).map((h) => h.trim());
+  const dateIdx = header.indexOf("Date");
+  if (dateIdx < 0) throw new Error("Lipsește coloana Date.");
+  if (header.length < 10) throw new Error("Nu pare un fișier DataSprint (prea puține coloane).");
+  const dates = rows.map((r) => parseDate(r[dateIdx]) ?? "").filter(Boolean).sort();
+  if (!dates.length) throw new Error("Nicio dată validă în coloana Date.");
+  return { name, kind: header.includes(TARGET) ? "train" : "test", header, rows, dateIdx, from: dates[0], to: dates[dates.length - 1] };
+}
+
+/**
+ * Fișierul unic: rândurile din train și test (coloana split), toate coloanele DataSprint neschimbate și, lipite pe
+ * fiecare zi, variabilele extensiei. Ținta stress_event_20d rămâne exact cum era; la test e goală, ca în concurs.
+ */
+export function combineDataSprint(files: DsFile[], t: FeatureTable) {
+  const ordered = [...files].sort((a, b) => (a.kind === b.kind ? a.from.localeCompare(b.from) : a.kind === "train" ? -1 : 1));
+  const dsCols: string[] = [];
+  for (const f of ordered) for (const h of f.header) if (h !== "Date" && h !== "split" && !dsCols.includes(h)) dsCols.push(h);
+  const first = dsCols.filter((c) => c === TARGET);
+  const restDs = dsCols.filter((c) => c !== TARGET);
+  const ext = t.columns.map((c, i) => [c, i] as const).filter(([c]) => !dsCols.includes(c));
+  const byDate = new Map(t.dates.map((d, i) => [d, t.rows[i]]));
+  const out: string[][] = [];
+  let matched = 0, targets = 0;
+  for (const f of ordered) {
+    const idx = new Map(f.header.map((h, i) => [h, i]));
+    for (const r of f.rows) {
+      const date = parseDate(r[f.dateIdx]) ?? r[f.dateIdx];
+      const e = byDate.get(date);
+      if (e) matched++;
+      const get = (c: string) => { const i = idx.get(c); return i === undefined ? "" : r[i] ?? ""; };
+      if (f.kind === "train" && get(TARGET).trim() !== "") targets++;
+      out.push([date, f.kind, ...first.map(get), ...restDs.map(get), ...ext.map(([, i]) => (e ? cell(e[i]) : ""))]);
+    }
+  }
+  out.sort((a, b) => a[0].localeCompare(b[0]));
+  const header = ["Date", "split", ...first, ...restDs, ...ext.map(([c]) => c)];
+  return {
+    csv: Papa.unparse([header, ...out]) + "\n",
+    rows: out.length, train: out.filter((r) => r[1] === "train").length, test: out.filter((r) => r[1] === "test").length,
+    dsColumns: dsCols.length, extColumns: ext.length, matched, targets,
+  };
+}
+
 /**
  * Pasul merge_original al scraper-ului: lipește feature-urile pe train.csv / test.csv după Date (left join).
  * Coloanele originale și ținta stress_event_20d rămân neatinse; coloanele deja existente nu se dublează.

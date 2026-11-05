@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import Papa from "papaparse";
-import { augmentCsv, buildFeatureTable, featureTableToCsv, featureTableToExt, parseExtensionCsv, qualityFlags, type RawExt } from "./extension";
+import { augmentCsv, buildFeatureTable, combineDataSprint, featureTableToCsv, featureTableToExt, parseDataSprint, parseExtensionCsv, qualityFlags, type RawExt } from "./extension";
 
 const days = (n: number) => Array.from({ length: n }, (_, i) => new Date(Date.UTC(2024, 0, 1 + i)).toISOString().slice(0, 10));
 const D = days(46); // 2024-01-01 … 2024-02-15
@@ -73,6 +73,31 @@ describe("augmentCsv", () => {
     expect(rows[1].slice(0, 3)).toEqual(["1/2/2024", "0", "5"]);
     expect(rows[2][1]).toBe("1");
     expect(rows[1]).toHaveLength(3 + r.added);
+  });
+});
+
+describe("fișierul unic DataSprint + extensie", () => {
+  const t = buildFeatureTable(raw, opts);
+  const cols = (n: number) => Array.from({ length: n }, (_, i) => `C${i}`);
+  const train = parseDataSprint(
+    `Date,stress_event_20d,BET_Close_RON,${cols(9).join(",")}\n2024-01-02,1,101,${cols(9).map(() => 2).join(",")}\n2024-01-01,0,100,${cols(9).map(() => 1).join(",")}\n`, "train.csv");
+  const test = parseDataSprint(`Date,${cols(9).join(",")}\n2024-01-03,${cols(9).map(() => 3).join(",")}\n`, "test.csv");
+
+  it("recunoaște train și test", () => {
+    expect([train.kind, test.kind]).toEqual(["train", "test"]);
+    expect([train.from, train.to]).toEqual(["2024-01-01", "2024-01-02"]);
+  });
+  it("pune train + test într-un singur fișier, cu ținta neschimbată și variabilele noi pe fiecare zi", () => {
+    const c = combineDataSprint([test, train], t);
+    const rows = Papa.parse<string[]>(c.csv, { skipEmptyLines: true }).data;
+    expect(rows[0].slice(0, 5)).toEqual(["Date", "split", "stress_event_20d", "BET_Close_RON", "C0"]);
+    expect(rows[0]).toContain("CRYPTO_BTC_close");
+    expect(rows.slice(1).map((r) => [r[0], r[1], r[2]])).toEqual([["2024-01-01", "train", "0"], ["2024-01-02", "train", "1"], ["2024-01-03", "test", ""]]);
+    expect([c.rows, c.train, c.test, c.targets, c.matched, c.dsColumns]).toEqual([3, 2, 1, 2, 3, 11]);
+    expect(rows[1][rows[0].indexOf("CRYPTO_BTC_close")]).toBe("100");
+  });
+  it("respinge fișiere care nu sunt DataSprint", () => {
+    expect(() => parseDataSprint("Date,a\n2024-01-01,1\n", "x.csv")).toThrow();
   });
 });
 

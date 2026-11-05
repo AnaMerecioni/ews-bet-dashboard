@@ -115,8 +115,23 @@ async function ecb(flowKey: string, start: string, ctx: SourceCtx) {
 }
 const ecbOne = async (flowKey: string, start: string, ctx: SourceCtx) => [...(await ecb(flowKey, start, ctx)).values()][0] ?? [];
 
+// Eurostat răspunde cu 500 la cereri simultane de la același client (și între surse diferite): le punem la coadă.
+let eurostatQueue: Promise<unknown> = Promise.resolve();
+function eurostat(dataset: string, params: Record<string, string>, since: string, ctx: SourceCtx): Promise<[string, number][]> {
+  const run = eurostatQueue.then(() => eurostatNow(dataset, params, since, ctx));
+  eurostatQueue = run.catch(() => undefined);
+  return run;
+}
+
+/** O serie care eșuează nu oprește restul sursei; sursa eșuează doar dacă pică toate. */
+async function partial<T extends unknown[]>(calls: { [K in keyof T]: () => Promise<T[K]> }, empty: { [K in keyof T]: T[K] }): Promise<T> {
+  const res = await Promise.allSettled(calls.map((c) => c()));
+  if (res.every((r) => r.status === "rejected")) throw (res[0] as PromiseRejectedResult).reason;
+  return res.map((r, i) => (r.status === "fulfilled" ? r.value : empty[i])) as T;
+}
+
 /** Eurostat JSON-stat, cu filtre care aleg o singură categorie pe fiecare dimensiune în afară de timp. */
-async function eurostat(dataset: string, params: Record<string, string>, since: string, ctx: SourceCtx): Promise<[string, number][]> {
+async function eurostatNow(dataset: string, params: Record<string, string>, since: string, ctx: SourceCtx): Promise<[string, number][]> {
   const q = new URLSearchParams({ ...params, sinceTimePeriod: since });
   const t = await fetchText(`https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/${dataset}?${q}`, ctx, (s) => s.startsWith("{"));
   const d = JSON.parse(t) as { id: string[]; size: number[]; value: Record<string, number>; dimension: Record<string, { category: { index: Record<string, number> } }> };
@@ -186,8 +201,11 @@ export const SOURCES: SourceDef[] = [
       const y2 = [...yc].find(([k]) => k.endsWith("SR_2Y"))?.[1] ?? [];
       ctx.progress("Eurostat: randamentele pe 10 ani România / Germania…");
       const since = warmMonth(ctx.start, 4);
-      const ro = await eurostat("irt_lt_mcby_m", { geo: "RO" }, since, ctx);
-      const de = await eurostat("irt_lt_mcby_m", { geo: "DE" }, since, ctx);
+      // dacă Eurostat nu răspunde, păstrăm măcar curba zonei euro
+      const [ro, de] = await partial<[[string, number][], [string, number][]]>([
+        () => eurostat("irt_lt_mcby_m", { geo: "RO" }, since, ctx),
+        () => eurostat("irt_lt_mcby_m", { geo: "DE" }, since, ctx),
+      ], [[], []]).catch(() => [[], []] as [[string, number][], [string, number][]]);
       return [
         { meta: meta("RATES_EA_10Y", "ECB YC", "zilnic", "a doua zi", "Randamentul pe 10 ani al curbei AAA a zonei euro (%)."), points: daily(y10), fill: "daily" },
         { meta: meta("RATES_EA_2Y", "ECB YC", "zilnic", "a doua zi", "Randamentul pe 2 ani al curbei AAA a zonei euro (%)."), points: daily(y2), fill: "daily" },
@@ -226,16 +244,15 @@ export const SOURCES: SourceDef[] = [
     async run(ctx) {
       const since = warmMonth(ctx.start, 15);
       // Eurostat răspunde cu 500 la cereri simultane: le facem pe rând
-      ctx.progress("Eurostat: încrederea economică în România…");
-      const esi = await eurostat("ei_bssi_m_r2", { geo: "RO", indic: "BS-ESI-I", s_adj: "SA" }, since, ctx);
-      ctx.progress("Eurostat: încrederea consumatorilor…");
-      const cons = await eurostat("ei_bssi_m_r2", { geo: "RO", indic: "BS-CSMCI-BAL", s_adj: "SA" }, since, ctx);
-      ctx.progress("Eurostat: producția industrială…");
-      const ip = await eurostat("sts_inpr_m", { geo: "RO", nace_r2: "B-D", s_adj: "SCA", unit: "I21" }, since, ctx);
-      ctx.progress("Eurostat: comerțul cu amănuntul…");
-      const retail = await eurostat("sts_trtu_m", { geo: "RO", nace_r2: "G47", s_adj: "SCA", unit: "I21", indic_bt: "VOL_SLS" }, since, ctx);
-      ctx.progress("OECD: indicatorii economici avansați…");
-      const cli = await oecdCli(["DEU", "USA", "CHN", "G20"], since, ctx);
+      ctx.progress("Eurostat și OECD: sentiment, activitate, ciclul global…");
+      const none: [string, number][] = [];
+      const [esi, cons, ip, retail, cli] = await partial<[[string, number][], [string, number][], [string, number][], [string, number][], Map<string, [string, number][]>]>([
+        () => eurostat("ei_bssi_m_r2", { geo: "RO", indic: "BS-ESI-I", s_adj: "SA" }, since, ctx),
+        () => eurostat("ei_bssi_m_r2", { geo: "RO", indic: "BS-CSMCI-BAL", s_adj: "SA" }, since, ctx),
+        () => eurostat("sts_inpr_m", { geo: "RO", nace_r2: "B-D", s_adj: "SCA", unit: "I21" }, since, ctx),
+        () => eurostat("sts_trtu_m", { geo: "RO", nace_r2: "G47", s_adj: "SCA", unit: "I21", indic_bt: "VOL_SLS" }, since, ctx),
+        () => oecdCli(["DEU", "USA", "CHN", "G20"], since, ctx),
+      ], [none, none, none, none, new Map()]);
       const c = (a: string) => cli.get(a) ?? [];
       const rev = " Datele OECD se revizuiesc; folosim ultima versiune.";
       return [
@@ -384,12 +401,25 @@ export function metadataCsv(metas: ColMeta[]) {
 }
 
 /** Codul de lipit în notebook: încărcarea dataset-ului și categoriile noi pentru descompunerea Shapley. */
-export function notebookSnippet(datasetSlug = "<username>/datasprint-ews-external-features", used = EXT_CATEGORIES) {
+export const COMBINED_FILE = "datasprint_gama_enriched.csv";
+
+export function notebookSnippet(datasetSlug = "<username>/gama-datasprint-enriched", used = EXT_CATEGORIES, single = false) {
+  const dir = `/kaggle/input/${datasetSlug.split("/").pop()}`;
+  const load = single
+    ? [
+      "# --- Gama: un singur fișier = DataSprint (train + test) îmbogățit cu datele extensiei ---",
+      `DF = pd.read_csv('${dir}/${COMBINED_FILE}', parse_dates=['Date'])`,
+      "train = DF[DF.split == 'train'].drop(columns='split').reset_index(drop=True)   # ținta stress_event_20d e neschimbată",
+      "test = DF[DF.split == 'test'].drop(columns=['split', 'stress_event_20d', 'BET_Close_RON']).reset_index(drop=True)",
+    ]
+    : [
+      "# --- Extensia Gama: date externe care îmbogățesc DataSprint ---",
+      `EXT = pd.read_csv('${dir}/ews_external_features.csv', parse_dates=['Date'])`,
+      "train = train.merge(EXT, on='Date', how='left')   # ținta stress_event_20d rămâne neschimbată",
+      "test = test.merge(EXT, on='Date', how='left')",
+    ];
   return [
-    "# --- Extensia Gama: date externe care îmbogățesc DataSprint ---",
-    `EXT = pd.read_csv('/kaggle/input/${datasetSlug.split("/").pop()}/ews_external_features.csv', parse_dates=['Date'])`,
-    "train = train.merge(EXT, on='Date', how='left')   # ținta stress_event_20d rămâne neschimbată",
-    "test = test.merge(EXT, on='Date', how='left')",
+    ...load,
     "",
     "# categoriile coloanelor extensiei (adaugă aceleași nume și în CATEGORII, pentru grafice și Shapley pe categorii)",
     "REGULI_CATEGORIE += [",
