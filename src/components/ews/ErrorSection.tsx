@@ -42,7 +42,7 @@ export function ErrorSection() {
       <section aria-label="Probabilitatea de eroare">
         {head}
         <EmptyState icon={FlaskConical} title="Lipsesc rezultatele reale">
-          Erorile se pot calcula doar unde știm ce s-a întâmplat. Încarcă <strong>outcomes.csv</strong> (coloanele <code>Date, stress_event_20d</code>) pe{" "}
+          Erorile se pot calcula doar unde știm ce s-a întâmplat. Etichetele reale apar în output după ce adaugi o dată celula de export în notebook; detalii pe{" "}
           <Link to="/date" className="font-semibold text-primary underline">pagina Date</Link>.
         </EmptyState>
       </section>

@@ -52,7 +52,7 @@ function Explain() {
       <div>
         <PageHeader eyebrow="04 — De ce?" title="Explicabilitate" />
         <EmptyState icon={Lightbulb} title="Lipsesc factorii SHAP">
-          Încarcă fișierul <strong>drivers.csv</strong> pe pagina Date pentru a vedea ce crește riscul, pe variabile și categorii.
+          Contribuțiile SHAP pe zile nu sunt în output-ul încărcat. Pe pagina Date găsești celula care le adaugă în output-ul notebook-ului.
         </EmptyState>
         <div className="mt-12 space-y-12">
           <ErrorSection />

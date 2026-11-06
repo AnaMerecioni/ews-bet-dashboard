@@ -77,6 +77,8 @@ interface Ctx {
   settings: Settings;
   updateSettings: (s: Partial<Settings>) => void;
   setFile: (kind: FileKind, rows: unknown[], name: string) => void;
+  /** Înlocuiește toate datele cu output-ul unei rulări a notebook-ului și deconectează linkurile vechi. */
+  loadBundle: (data: Partial<Record<FileKind, unknown[]>>, names: Partial<Record<FileKind, string>>) => void;
   clearData: () => void;
   assets: string[];
   asset: string;
@@ -307,6 +309,16 @@ export function EwsProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshSources]);
   const setRefreshMinutes = useCallback((m: RefreshMinutes) => saveSources(sourcesRef.current, m), []);
+  const loadBundle = useCallback((data: Partial<Record<FileKind, unknown[]>>, names: Partial<Record<FileKind, string>>) => {
+    // Output-ul nou înlocuiește tot: nu rămân fișiere vechi (din linkuri sau încărcări anterioare) amestecate cu el,
+    // iar linkurile nu mai suprascriu datele la următoarea deschidere.
+    saveSources({});
+    const next: DataFiles = { ...(data as DataFiles), names, updatedAt: new Date().toISOString() };
+    setUser(next);
+    persist(next);
+    setSelectedDate(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // refresh on app open
   const opened = useRef(false);
   useEffect(() => {
@@ -497,7 +509,7 @@ export function EwsProvider({ children }: { children: ReactNode }) {
     notifications, markRead, clearNotifications, updateNotif, simulateUpdate, canSimulate: isDemo && demoCut > 0, live,
     sources, refreshMinutes, setRefreshMinutes, connectSource, disconnectSource, refreshSources, importConfig, remoteStatus,
     remoteLive: Object.values(sources).some((x) => x?.status === "ok" || (x?.status === "loading" && x.lastOk)),
-    hydrated, isDemo, files, settings, updateSettings, setFile, clearData,
+    hydrated, isDemo, files, settings, updateSettings, setFile, loadBundle, clearData,
     assets, asset, setAsset, range, setRange, fullSeries, series, thr, alerts, episodes,
     hasDrivers: driverMap.size > 0, hasOutcomes, sensitivity: files.sensitivity?.length ? files.sensitivity : null,
     driversFor, driverMap, features, categories, lastDate, selectedDate, setSelectedDate, indexOf,

@@ -95,7 +95,7 @@ export const QUESTIONS: Question[] = [
     label: (c) => `De ce este riscul ${last(c).level === "low" ? "scăzut" : "ridicat"}?`,
     answer: (c) => {
       const d = last(c);
-      if (!c.hasDrivers) return mk(["Încarcă ", { b: "drivers.csv" }, " pentru a vedea factorii care explică riscul."], { link: { to: "/date", label: "Mergi la Date" } });
+      if (!c.hasDrivers) return mk(["Factorii SHAP nu sunt în output-ul încărcat. Pe pagina Date găsești celula care îi exportă din notebook."], { link: { to: "/date", label: "Mergi la Date" } });
       const cp = categoryPhrases(c.driversFor(d.date), 3);
       if (!cp.items.length) return mk([`Riscul este ${LEVEL_RO[d.level].toLowerCase()} pentru că `, { b: "niciun factor nu crește riscul" }, " în această zi."], { link: { to: "/explicabilitate", label: "Vezi explicabilitatea" } });
       return mk([
@@ -140,7 +140,7 @@ export const QUESTIONS: Question[] = [
     id: "model", keywords: "cat de bun model performanta anticipat episoade trecute acuratete backtest f2 auc",
     label: () => "Cât de bine a anticipat modelul episoadele trecute?",
     answer: (c) => {
-      if (!c.hasOutcomes) return mk(["Pentru a răspunde, încarcă ", { b: "outcomes.csv" }, " cu rezultatele reale (Date, stress_event_20d)."], { link: { to: "/date", label: "Mergi la Date" } });
+      if (!c.hasOutcomes) return mk(["Pentru a răspunde e nevoie de etichetele reale, exportate din notebook (vezi pagina Date)."], { link: { to: "/date", label: "Mergi la Date" } });
       const w = c.episodes.filter((e) => e.warned);
       const med = median(w.map((e) => e.warningDays!));
       const m = metrics(c.series, c.thr.alert);
@@ -152,7 +152,7 @@ export const QUESTIONS: Question[] = [
     id: "false", keywords: "alarme false cat de des gresit fals pozitive precizie",
     label: () => "Cât de des dă alarme false?",
     answer: (c) => {
-      if (!c.hasOutcomes) return mk(["Pentru a răspunde, încarcă ", { b: "outcomes.csv" }, " cu rezultatele reale."], { link: { to: "/date", label: "Mergi la Date" } });
+      if (!c.hasOutcomes) return mk(["Pentru a răspunde e nevoie de etichetele reale, exportate din notebook (vezi pagina Date)."], { link: { to: "/date", label: "Mergi la Date" } });
       const known = c.alerts.filter((a) => a.confirmed !== null);
       const f = known.filter((a) => a.confirmed === false).length;
       return mk([{ b: `${f} din ${known.length}` }, ` alerte (${pct(known.length ? f / known.length : 0, 0)}) au fost alarme false. Pragul e ales să rateze cât mai puține episoade, acceptând unele alarme false.`],
@@ -163,7 +163,7 @@ export const QUESTIONS: Question[] = [
     id: "whatif", keywords: "ce ar fi daca scenariu creste simulare categorie sensibilitate",
     label: () => "Ce s-ar întâmpla dacă o categorie crește?",
     answer: (c, arg) => {
-      if (!c.hasDrivers) return mk(["Încarcă ", { b: "drivers.csv" }, " pentru scenarii."], { link: { to: "/date", label: "Mergi la Date" } });
+      if (!c.hasDrivers) return mk(["Scenariile au nevoie de factorii SHAP exportați din notebook (vezi pagina Date)."], { link: { to: "/date", label: "Mergi la Date" } });
       const d = last(c);
       const rows = c.driversFor(d.date);
       const cat = arg && c.categories.includes(arg) ? arg : byCategory(rows).find((x) => x.value > 0)?.category ?? c.categories[0];

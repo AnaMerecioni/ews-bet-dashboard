@@ -48,7 +48,7 @@ function Summary() {
       : `Încă neconfirmată (necesită ${days(settings.confirmDays)} consecutive peste prag).`
     : "";
   const catSentence = !hasDrivers
-    ? "Încarcă drivers.csv pentru descompunerea pe categorii."
+    ? "Factorii SHAP nu sunt în output-ul încărcat (vezi pagina Date)."
     : cp.sentence
       ? cp.sentence.charAt(0).toUpperCase() + cp.sentence.slice(1) + "."
       : "Nicio categorie nu crește riscul în această zi.";
