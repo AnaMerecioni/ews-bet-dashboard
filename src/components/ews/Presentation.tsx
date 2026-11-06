@@ -110,16 +110,16 @@ function Presentation({ onClose }: { onClose: () => void }) {
         caption: alert
           ? `Alerta a pornit pe ${fmtDate(alert.start)} și a durat ${days(alert.duration)} (vârf ${pct(alert.peak)}). Acțiune: ${pb.action} Decide: ${pb.owner}.${alert.confirmed === true ? ` Confirmată: BET a scăzut ≥5%${ep?.warningDays != null ? `, cu ${days(ep.warningDays)} avans` : ""}.` : alert.confirmed === false ? " A fost o alarmă falsă — costul a fost doar unul de prudență." : ""}`
           : `Nu există nicio alertă până la această dată. O alertă pornește după ${days(settings.confirmDays)} consecutive peste prag.`,
-        notes: ["Fiecare alertă are un responsabil și o acțiune clară.", hasOutcomes ? "Putem arăta câte zile de avans am avut." : "Cu outcomes.csv arătăm și avansul alertei."] },
+        notes: ["Fiecare alertă are un responsabil și o acțiune clară.", hasOutcomes ? "Putem arăta câte zile de avans am avut." : "Cu etichetele reale arătăm și avansul alertei."] },
       { title: "Explicațiile modelului", route: "/ansamblu", targets: ["tour-drivers", "tour-cats"],
         caption: cp.sentence
           ? `Riscul este împins în sus de: ${cp.sentence}. Acestea sunt contribuții, nu cauzalitate.`
-          : "Încarcă drivers.csv pentru a vedea factorii. Explicațiile arată contribuții, nu cauzalitate.",
+          : "Factorii SHAP apar după exportul din notebook. Explicațiile arată contribuții, nu cauzalitate.",
         notes: ["Roșu = crește riscul, albastru = îl scade (valori SHAP).", "Gruparea pe categorii ajută decizia rapidă."] },
       { title: "Scenariu what-if", route: "/explicabilitate", targets: ["tour-whatif"],
         caption: topCat
           ? `Dacă factorii din categoria „${topCat}” (${catPhrase}) ${down ? "scad" : "cresc"} cu 50%, probabilitatea ${down ? "coboară" : "urcă"} de la ${pct(d.p)} la ${pct(np)} și nivelul devine ${LEVEL_RO[nl]}.`
-          : "Pentru scenarii avem nevoie de contribuțiile SHAP (drivers.csv).",
+          : "Pentru scenarii avem nevoie de contribuțiile SHAP exportate din notebook.",
         notes: ["Aproximare pe baza contribuțiilor SHAP, nu rerulează modelul.", "Managementul poate testa singur alte scenarii cu cursoarele."] },
     ];
   }, [date, fullSeries, indexOf, driversFor, alerts, settings, thr, episodes, hasOutcomes]);

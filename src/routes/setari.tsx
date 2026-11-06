@@ -58,7 +58,7 @@ function SettingsPage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <Card aria-labelledby="thr-h">
           <h2 id="thr-h" className="text-base font-semibold">Praguri și alerte</h2>
-          <Row title="Prag de alertă" desc="Vine din predictions.csv (stress_threshold).">
+          <Row title="Prag de alertă" desc="Vine din output-ul notebook-ului (stress_threshold).">
             <span className="text-lg font-bold tabular-nums">{pct(thr.alert)}</span>
           </Row>
           <Row title="Prag ridicat" desc={thr.highFromFile ? "Vine din coloana high_threshold a fișierului." : `Implicit: pragul de alertă × 1,5 = ${pct(Math.min(0.99, thr.alert * 1.5))}.`}>
@@ -78,7 +78,7 @@ function SettingsPage() {
           <Row title="Zile de confirmare" desc="Câte zile consecutive peste prag declanșează o alertă.">
             <Seg label="Zile de confirmare" value={s.confirmDays} onChange={(v) => u({ confirmDays: v })} options={[1, 2, 3].map((v) => ({ v, l: String(v) }))} />
           </Row>
-          <Row title="Unitatea contribuțiilor SHAP" desc="Cum sunt exprimate valorile din drivers.csv.">
+          <Row title="Unitatea contribuțiilor SHAP" desc="Cum sunt exprimate contribuțiile SHAP (celula de export din notebook le scrie în log-odds).">
             <Seg label="Unitate SHAP" value={s.shapUnit} onChange={(v) => u({ shapUnit: v })} options={[{ v: "pp", l: "Procente" }, { v: "logit", l: "Log-odds" }]} />
           </Row>
 

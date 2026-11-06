@@ -30,8 +30,8 @@ function Backtest() {
     return (
       <div>
         <PageHeader eyebrow="05 — Încredere" title="Backtest" />
-        <EmptyState icon={FlaskConical} title="Încarcă rezultatele reale">
-          Pentru backtest avem nevoie de <strong>outcomes.csv</strong> cu coloanele <code>Date, stress_event_20d</code> (și opțional <code>BET</code>).{" "}
+        <EmptyState icon={FlaskConical} title="Lipsesc rezultatele reale">
+          Backtest-ul are nevoie de etichetele reale din perioada de validare. Ele apar în output după ce adaugi o dată celula de export în notebook.{" "}
           <Link to="/date" className="font-semibold text-brand-accent underline dark:text-primary">Mergi la Date</Link>
         </EmptyState>
       </div>
